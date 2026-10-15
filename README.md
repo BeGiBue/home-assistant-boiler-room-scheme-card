@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/docs/assets/logo-160.png" alt="Boiler Room Scheme Card" width="160">
+
 # Boiler Room Scheme Card
 
 Eine Home-Assistant-Karte (`custom:heizungsanlage-card`), die eine Gas-/Ölheizung als
