@@ -7,5 +7,6 @@
     "check": "node --check dist/heizungsanlage-card.js",
     "test": "python3 tools/test_editor.py",
     "preview": "python3 tools/harness.py --all"
-  }
+  },
+  "license": "AGPL-3.0-only"
 }
