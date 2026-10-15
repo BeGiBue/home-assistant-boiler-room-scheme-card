@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="t">
+  <title id="t">Boiler Room Scheme Card</title>
+  <circle cx="256" cy="256" r="232" fill="#0a6070"/>
+  <rect x="176" y="148" width="160" height="220" rx="30" fill="#ffffff"/>
+  <rect x="132" y="190" width="44" height="14" rx="7" fill="#8fd3f4"/>
+  <rect x="336" y="318" width="44" height="14" rx="7" fill="#8fd3f4"/>
+  <path d="M256 206 C232 244 214 266 214 298 A42 42 0 0 0 298 298 C298 266 280 244 256 206 Z" fill="#f59e0b"/>
+  <rect x="206" y="336" width="100" height="10" rx="5" fill="#0a6070"/>
+</svg>
