@@ -1,4 +1,4 @@
-# Heizungskeller Schema
+# Boiler Room Scheme Card
 
 Eine Home-Assistant-Karte (`custom:heizungsanlage-card`), die eine Gas-/Ölheizung als
 animiertes Anlagenschema darstellt: Kessel, Warmwasserspeicher, Pumpen, Heizkörper,
@@ -32,14 +32,14 @@ Gas- und Wasserzähler, Enthärtungsanlage – mit Live-Werten und Verläufen.
 
 Mit einem Klick (über My Home Assistant öffnet sich das Repository direkt in HACS deiner Home-Assistant-Instanz):
 
-[![In HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=BeGiBue&repository=heizungskeller-schema&category=plugin)
+[![In HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=BeGiBue&repository=home-assistant-boiler-room-scheme-card&category=plugin)
 
 Danach „Herunterladen" wählen und den Browser-Cache leeren (bzw. die App neu laden).
 
 Oder von Hand:
 
 1. HACS öffnen → Menü (⋮) → **Benutzerdefinierte Repositories**.
-2. URL `https://github.com/BeGiBue/heizungskeller-schema` eintragen, Kategorie **Dashboard** wählen.
+2. URL `https://github.com/BeGiBue/home-assistant-boiler-room-scheme-card` eintragen, Kategorie **Dashboard** wählen.
 3. „Heizungskeller Schema" installieren und den Browser-Cache leeren (bzw. die App neu laden).
 
 HACS legt die Ressource automatisch an.
