@@ -1,4 +1,6 @@
-<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/docs/assets/logo-160.png" alt="Boiler Room Scheme Card" width="160">
+<p align="center">
+  <img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/docs/assets/logo-160.png?v=2" alt="Boiler Room Scheme Card" width="160">
+</p>
 
 # Boiler Room Scheme Card
 
