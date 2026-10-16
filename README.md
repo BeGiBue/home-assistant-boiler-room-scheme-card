@@ -12,15 +12,15 @@ Gas- und Wasserzähler, Enthärtungsanlage – mit Live-Werten und Verläufen.
 
 **Heizbetrieb – schmal (350 px), Details geschlossen**
 
-<img src="screenshots/boiler-heating-350-closed-light.png" width="350" alt="Heizbetrieb im hellen Theme, 350 px Kartenbreite, Details geschlossen">
+<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-350-closed-light.png" width="350" alt="Heizbetrieb im hellen Theme, 350 px Kartenbreite, Details geschlossen">
 
 **Heizbetrieb – schmal (350 px), Diagramme geöffnet**
 
-<img src="screenshots/boiler-heating-350-diagrams-light.png" width="350" alt="Heizbetrieb im hellen Theme, 350 px Kartenbreite, Diagramme geöffnet">
+<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-350-diagrams-light.png" width="350" alt="Heizbetrieb im hellen Theme, 350 px Kartenbreite, Diagramme geöffnet">
 
 **Heizbetrieb – breit (800 px)**
 
-<img src="screenshots/boiler-heating-800-light.png" width="800" alt="Vollständiges Heizungsschema im Heizbetrieb, 800 px Kartenbreite, helles Theme">
+<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-800-light.png" width="800" alt="Vollständiges Heizungsschema im Heizbetrieb, 800 px Kartenbreite, helles Theme">
 
 > Die Standardwerte der Karte passen zu einer Viessmann-Anlage
 > mit der ViCare-Integration (Vitocrossal 300 & Vitocell 100-V), lassen sich aber komplett im
