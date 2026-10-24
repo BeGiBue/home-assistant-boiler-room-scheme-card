@@ -4,6 +4,8 @@
 
 # Boiler Room Scheme Card
 
+**Version 2.0.0**
+
 Eine Home-Assistant-Karte (`custom:heizungsanlage-card`), die eine Gas-/Ölheizung als
 animiertes Anlagenschema darstellt: Kessel, Warmwasserspeicher, Pumpen, Heizkörper,
 Gas- und Wasserzähler, Enthärtungsanlage – mit Live-Werten und Verläufen.
@@ -32,34 +34,41 @@ Gas- und Wasserzähler, Enthärtungsanlage – mit Live-Werten und Verläufen.
 - **Pumpen mit drehendem Flügelrad**, solange sie laufen.
 - **Brenner:** Flamme im Sichtfenster, Größe folgt der Modulation. Darunter ein 24-h-Graph mit Modulation und Kesseltemperatur (Y-Achse in °C für die Kesseltemperatur).
 - **Warmwasserspeicher:** Füllanzeige, 24-h-Verlauf mit Soll-Linie, zwei grauen Grenzlinien sowie Maximum, Istwert und Minimum. Die Skala reicht von 5 K unter dem Mindest-Sollwert bis 5 K über dem Maximal-Sollwert (`limit_offset`); die grauen Grenzlinien bilden Unter- und Obergrenze.
-- **Einheiten umgerechnet:** Der Wasserzähler zeigt den Stand in m³ mit zwei Nachkommastellen und den Durchfluss in l/h, egal in welcher Einheit der Sensor liefert (L, m³; m³/h, l/min, l/h …).
-- **Einheiten linksbündig:** In Boxen mit mehreren Zahlenwerten stehen die Einheiten linksbündig untereinander, die Zahlen rechtsbündig davor.
-  Ausnahme: In den Boxen „Wasserzähler“ und „Enthärtungsanlage“ stehen alle Messwerte samt Einheit rechtsbündig.
+- **Einheiten umgerechnet:** Der Wasserzähler zeigt den Stand in m³ mit zwei Nachkommastellen und den Durchfluss in l/h. Unterstützte Volumeneinheiten und Durchflussraten (z. B. L, m³, m³/h, l/min und l/h) werden umgerechnet; unbekannte Einheiten werden unverändert angezeigt.
 - **Gas und Wasser aus dem Energie-Dashboard** (Stand und Tagesverbrauch), ohne zusätzliche Konfiguration.
-- **Tafel der Enthärtungsanlage:** letzte Regeneration (Datum), Salzstand in % und geschätzter Restbestand in Regenerationen, z. B. aus der Integration `heizungskeller-enthaertung`.
+- **Enthärtungsanlage:** letzte Regeneration (Datum), Salzstand in % und geschätzter Restbestand in Regenerationen über passende Sensoren, z. B. aus [Water Softener Refill Sensor](https://github.com/BeGiBue/home-assistant-water-softener-refill-sensor).
 - **Kompakte Ansicht** für Handy und kleine Hochformat-Displays mit aufklappbaren Details.
 - **Untere Leiste:** Status (Außentemperatur, Frostschutz, Brennerstunden, Brennerstarts) und Einstellungen (Heizkurve, Temperaturen).
 - Ein Klick auf jeden Wert öffnet den normalen Home-Assistant-Entitätsdialog.
 
 ## Installation
 
-### Über HACS (empfohlen)
+### Über den offiziellen HACS-Katalog (empfohlen)
 
-Mit einem Klick (über My Home Assistant öffnet sich das Repository direkt in HACS deiner Home-Assistant-Instanz):
+1. HACS öffnen und nach **Boiler Room Scheme Card** suchen.
+2. Die Karte auswählen und herunterladen.
+3. Browser vollständig neu laden; in der Companion-App gegebenenfalls den Frontend-Cache zurücksetzen.
 
 [![In HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=BeGiBue&repository=home-assistant-boiler-room-scheme-card&category=plugin)
 
-Danach „Herunterladen" wählen und den Browser-Cache leeren (bzw. die App neu laden).
+HACS legt die Dashboard-Ressource normalerweise automatisch an. Falls sie fehlt, unter
+**Einstellungen → Dashboards → Ressourcen** die URL
+`/hacsfiles/home-assistant-boiler-room-scheme-card/heizungsanlage-card.js` als **JavaScript-Modul** hinzufügen.
+Eine bereits vorhandene Ressource nicht doppelt eintragen.
 
-Oder von Hand:
+### Bestehende Custom-Repository-Installation migrieren
 
-1. HACS öffnen → Menü (⋮) → **Benutzerdefinierte Repositories**.
-2. URL `https://github.com/BeGiBue/home-assistant-boiler-room-scheme-card` eintragen, Kategorie **Dashboard** wählen.
-3. „Heizungskeller Schema" installieren und den Browser-Cache leeren (bzw. die App neu laden).
+1. Zuerst prüfen, ob **Boiler Room Scheme Card** im offiziellen HACS-Katalog gefunden wird. Falls nicht,
+   HACS aktualisieren und den bisherigen Custom-Repository-Eintrag vorerst behalten.
+2. Unter **HACS → ⋮ → Benutzerdefinierte Repositories** nur den Eintrag für
+   `BeGiBue/home-assistant-boiler-room-scheme-card` entfernen.
+3. **Die bestehende Installation nicht deinstallieren.** Dashboard-Ressource, Karten und YAML-Konfigurationen beibehalten.
+4. HACS neu laden bzw. **Informationen aktualisieren** und die weiterhin installierte Karte sowie angebotene Updates prüfen.
+5. Nach einem Update das Frontend vollständig neu laden und bestehende Karten prüfen.
 
-HACS legt die Ressource automatisch an.
-
-Falls die Ressource manuell eingetragen werden muss: `/hacsfiles/home-assistant-boiler-room-scheme-card/heizungsanlage-card.js`, Typ **JavaScript-Modul**.
+Die Aufnahme in den offiziellen HACS-Katalog erfordert kein erneutes Anlegen der Karten.
+`type: custom:heizungsanlage-card`, Entitätszuordnungen und vorhandene Konfigurationsschlüssel bleiben erhalten.
+Die Major-Version 2.0.0 markiert diesen Meilenstein und bedeutet **nicht automatisch Breaking Changes**.
 
 ### Manuell
 
@@ -163,8 +172,15 @@ Im Editor werden nur Abweichungen von den Standardwerten in die YAML-Konfigurati
 | Kaltwasserleitungen, Tropfen am Hahn | `water_flow` > 0 |
 | Füllung im Speicherfenster | `tank_temp` (zwischen `tank_range`) |
 
-## Hinweise
+## Voraussetzungen und Grenzen
 
+- Home Assistant mit Custom-Card-Unterstützung und ein aktueller Browser mit SVG- und `ResizeObserver`-Unterstützung.
+- Eine eingerichtete Geräteintegration und passende Entitäten. Die Karte liefert keine ViCare-, Zähler- oder Enthärtungsintegration mit.
+- Die Standardzuordnungen passen zur oben genannten Viessmann-Anlage. Für andere Anlagen Entitäten im Editor zuordnen.
+- Für automatische Gas-/Wasserwerte müssen passende Quellen im Energie-Dashboard eingerichtet sein. Alternativ lassen sich die Zählerentitäten ausdrücklich konfigurieren.
+- Die Karte stellt Zustände dar und öffnet bei Klick den HA-Entitätsdialog. Sie ruft selbst keine Schalt- oder Heizungsdienste auf. Aktionen im Entitätsdialog unterliegen den Berechtigungen der angemeldeten HA-Sitzung.
+- Animationen zeigen die gemeldeten Zustände, keine unabhängig gemessenen Strömungen. Fehlende oder veraltete Sensoren und Recorder-Daten begrenzen die Aussagekraft; die Karte ersetzt keine Anlagenüberwachung.
+- Nicht endliche Messwerte und rechnerisch unbrauchbare Diagrammskalen werden verworfen. Extreme Zahlen können keine endlose Skalenberechnung mehr auslösen; normale Werte und Standardzuordnungen bleiben erhalten.
 - Die Verläufe (24 h) werden alle 5 Minuten über die Recorder-Datenbank neu geladen; die Entitäten müssen dafür im Verlauf aufgezeichnet werden.
 - Werte werden mit der nativen Formatierung von Home Assistant angezeigt (Sprache, Einheit, Anzeige-Genauigkeit der Entität).
 - Die Gerätegrafiken sind als Bilder in die JavaScript-Datei eingebettet, es werden keine weiteren Dateien nachgeladen.
@@ -173,7 +189,7 @@ Im Editor werden nur Abweichungen von den Standardwerten in die YAML-Konfigurati
 ## Entwicklung
 
 Die Karte besteht aus **einer** Datei, `dist/heizungsanlage-card.js` (kein Build-Schritt). Arbeitsanweisungen für
-Claude Code stehen in `CLAUDE.md`, Anlage, Entitäten und Design-Entscheidungen in `CONTEXT.md`.
+Claude Code stehen in `CLAUDE.md`, Anlage, Entitäten und technische Zuordnungen in `CONTEXT.md`.
 
 ```bash
 npm run check      # Syntax prüfen
@@ -183,5 +199,15 @@ python3 tools/images.py extract   # eingebettete Gerätebilder nach assets/devic
 python3 tools/images.py embed     # Bilder wieder einbetten
 ```
 
-Für Vorschau und Tests: `pip install playwright pillow` und `playwright install chromium`.
+Für Vorschau und Tests: `pip install -r requirements-dev.txt` und `playwright install chromium`.
 In Claude Code stehen dazu die Befehle `/vorschau` und `/release` bereit (`.claude/commands/`).
+
+## Release-Vorbereitung
+
+Änderungen und Migrationshinweise stehen in [CHANGELOG.md](CHANGELOG.md), der vorbereitete Release-Text in
+[RELEASE_NOTES_2.0.0.md](RELEASE_NOTES_2.0.0.md) und die Ergebnisse des Security-Reviews in
+[SECURITY_REVIEW.md](SECURITY_REVIEW.md).
+
+Der vorhandene Release-Workflow veröffentlicht bei einem Push auf `main` automatisch die Version aus `package.json`.
+Einen vorbereitenden Pull Request deshalb erst nach Review, erfolgreichen Prüfungen und ausdrücklicher
+Veröffentlichungsfreigabe mergen. Die Vorbereitung selbst erstellt weder Tag noch Release.

@@ -86,7 +86,7 @@ Detailbereich ab y854. Die Höhe der `viewBox` hängt vom geöffneten Thema ab.
 
 ## Vorschau und Tests
 
-Benötigt Python 3 sowie `pip install playwright pillow` und `playwright install chromium`.
+Benötigt Python 3 sowie `pip install -r requirements-dev.txt` und `playwright install chromium`.
 Ist das in der Umgebung nicht möglich, Änderungen sorgfältig durch Code-Lesen prüfen und dem Nutzer ausdrücklich
 sagen, dass keine Vorschau erzeugt werden konnte.
 

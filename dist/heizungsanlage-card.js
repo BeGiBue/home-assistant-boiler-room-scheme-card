@@ -8,7 +8,7 @@
  *   card:      type: custom:heizungsanlage-card   (Einstellungen über den visuellen Editor)
  */
 
-const CARD_VERSION = '1.0.8';
+const CARD_VERSION = '2.0.0';
 
 // Maskiert dynamische Texte und Werte in doppelt zitierten HTML-/SVG-Attributen.
 const esc = (value) => String(value)
@@ -777,7 +777,7 @@ class HeizungsanlageCard extends HTMLElement {
     const s = this._st(id);
     if (!s || s.state === 'unavailable' || s.state === 'unknown') return null;
     const n = parseFloat(s.state);
-    return isNaN(n) ? null : n;
+    return Number.isFinite(n) ? n : null;
   }
 
   _on(id) {
@@ -815,6 +815,7 @@ class HeizungsanlageCard extends HTMLElement {
     }
     const n = parseFloat(s.state);
     if (isNaN(n)) return s.state;
+    if (!Number.isFinite(n)) return '–';
     // Native Formatierung von Home Assistant (berücksichtigt Sprache, Einheit und die
     // je Entität eingestellte Anzeige-Genauigkeit), sofern die Frontend-Version sie bietet
     if (typeof this._hass.formatEntityState === 'function') {
@@ -837,10 +838,11 @@ class HeizungsanlageCard extends HTMLElement {
     const st = this._st(id);
     if (!st || st.state === 'unavailable' || st.state === 'unknown') return null;
     const n = parseFloat(st.state);
-    if (isNaN(n)) return null;
+    if (!Number.isFinite(n)) return null;
     const unit = ((st.attributes && st.attributes.unit_of_measurement) || '').trim().toLowerCase();
     const f = (UNIT_FACTORS[target] || {})[unit];
-    return f == null ? null : n * f;
+    const value = f == null ? null : n * f;
+    return Number.isFinite(value) ? value : null;
   }
 
   _unitOf(id) {
@@ -855,7 +857,7 @@ class HeizungsanlageCard extends HTMLElement {
   }
 
   _fmtVal0(n, unit, max = 1, min = 0) {
-    if (n == null || isNaN(n)) return '–';
+    if (!Number.isFinite(n)) return '–';
     const lang = (this._hass.locale && this._hass.locale.language) || this._hass.language || 'de';
     const txt = n.toLocaleString(lang, { minimumFractionDigits: min, maximumFractionDigits: max });
     return unit ? `${txt} ${unit}` : txt;
@@ -1091,7 +1093,7 @@ class HeizungsanlageCard extends HTMLElement {
             t: p.lu != null ? p.lu * 1000 : new Date(p.last_changed || p.lc || start).getTime(),
             v: parseFloat(p.s != null ? p.s : p.state),
           }))
-          .filter((p) => !isNaN(p.v) && !isNaN(p.t));
+          .filter((p) => Number.isFinite(p.v) && Number.isFinite(p.t));
       });
       this._drawChart();
       this._drawBurnerChart();
@@ -1115,10 +1117,26 @@ class HeizungsanlageCard extends HTMLElement {
 
   // Werte der Y-Achse: Unter- und Obergrenze plus runde Zwischenwerte (zu nahe an den Grenzen entfallen)
   _ticks(mn, mx, sy) {
+    const span = mx - mn;
+    if (!Number.isFinite(mn) || !Number.isFinite(mx) || !Number.isFinite(span) || span <= 0) return [];
     const px = Math.abs(sy(mn) - sy(mx)); // Höhe des Diagramms
-    const step = [5, 10, 20, 25, 50].find((st) => (px * st) / (mx - mn) >= 18) || 50; // Abstand mind. 18 px
+    if (!Number.isFinite(px) || px <= 0) return [];
+    let step = [5, 10, 20, 25, 50].find((st) => (px * st) / span >= 18);
+    if (!step) {
+      // Auch extreme Sensorwerte dürfen nur eine begrenzte Zahl von Skalenwerten erzeugen.
+      const required = span / Math.max(1, Math.min(32, Math.floor(px / 18)));
+      const scale = 10 ** Math.floor(Math.log10(required));
+      step = [1, 2, 2.5, 5, 10].map((n) => n * scale)
+        .find((st) => Number.isFinite(st) && st >= required) || span;
+    }
     const ticks = [mn];
-    for (let v = Math.floor(mn / step) * step + step; v < mx; v += step) {
+    const first = (Math.floor(mn / step) + 1) * step;
+    let previous = mn;
+    for (let i = 0; i < 64; i++) {
+      const v = first + i * step;
+      // Bei großen Zahlen kann Addition wegen Gleitkommapräzision stehen bleiben.
+      if (!Number.isFinite(v) || v <= previous || v >= mx) break;
+      previous = v;
       if (Math.abs(sy(v) - sy(mn)) >= 12 && Math.abs(sy(v) - sy(mx)) >= 12) ticks.push(v);
     }
     ticks.push(mx);
@@ -1147,10 +1165,14 @@ class HeizungsanlageCard extends HTMLElement {
     let axis = { mn: 0, mx: 100, color: '#e08a00' };
     if (bt.length >= 2) {
       const vals = bt.map((p) => p.v);
-      let mn = Math.floor((Math.min(...vals) - 2) / 5) * 5;
-      let mx = Math.ceil((Math.max(...vals) + 2) / 5) * 5;
+      let mn = Math.floor((vals.reduce((a, v) => Math.min(a, v), Infinity) - 2) / 5) * 5;
+      let mx = Math.ceil((vals.reduce((a, v) => Math.max(a, v), -Infinity) + 2) / 5) * 5;
       if (mx - mn < 10) mx = mn + 10;
       axis = { mn, mx, color: '#e53935' };
+    }
+    if (!Number.isFinite(axis.mx - axis.mn) || axis.mx <= axis.mn) {
+      g.innerHTML = `<text class="s" x="${(X0 + X1) / 2}" y="${(Y0 + Y1) / 2}" text-anchor="middle">Keine verwertbaren Verlaufsdaten</text>`;
+      return;
     }
     const sya = (v) => Y1 - ((v - axis.mn) / (axis.mx - axis.mn)) * (Y1 - Y0);
     this._ticks(axis.mn, axis.mx, sya).forEach((v) => {
@@ -1198,11 +1220,15 @@ class HeizungsanlageCard extends HTMLElement {
     // fehlt ein Grenzwert, wird diese Seite aus dem Verlauf bestimmt
     const vals = pts.map((p) => p.v);
     if (tgt != null) vals.push(tgt);
-    let mn = lmin != null ? lmin : Math.floor((Math.min(...vals) - 2) / 5) * 5;
-    let mx = lmax != null ? lmax : Math.ceil((Math.max(...vals) + 2) / 5) * 5;
+    let mn = lmin != null ? lmin : Math.floor((vals.reduce((a, v) => Math.min(a, v), Infinity) - 2) / 5) * 5;
+    let mx = lmax != null ? lmax : Math.ceil((vals.reduce((a, v) => Math.max(a, v), -Infinity) + 2) / 5) * 5;
     if (mx - mn < 10) {
       if (lmax == null) mx = mn + 10;
       else mn = mx - 10;
+    }
+    if (!Number.isFinite(mx - mn) || mx <= mn) {
+      g.innerHTML = `<text class="s" x="${(X0 + X1) / 2}" y="${(Y0 + Y1) / 2}" text-anchor="middle">Keine verwertbaren Verlaufsdaten</text>`;
+      return;
     }
     const sx = (t) => X0 + ((Math.max(t, t0) - t0) / (now - t0)) * (X1 - X0);
     // Werte außerhalb der Skala werden am Rand gezeichnet (die Zahlen rechts zeigen weiterhin die echten Werte)
