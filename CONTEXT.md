@@ -4,6 +4,14 @@ Diese Datei hält fest, was über die Anlage und die verwendeten Entitäten beka
 Ausgangspunkt für weitere Änderungen an der Karte (`dist/heizungsanlage-card.js`).
 In Claude Code wird sie automatisch geladen, wenn sie in `CLAUDE.md` umbenannt oder dort verlinkt wird.
 
+## Sichere Textausgabe (seit 1.0.8)
+
+Entitätszustände, Einheiten und Konfigurationswerte sind keine vertrauenswürdigen HTML-Inhalte.
+Bei HTML-/SVG-Templates maskiert die gemeinsame Funktion `esc()` dynamische Texte und Werte
+in doppelt zitierten Attributen einschließlich Anführungszeichen. Das gilt für alle `data-entity`-Werte
+und für beide Textteile (`n`, `u`) des Speicherdiagramms. Zustandszugriff und Entitätsklicks verwenden
+weiterhin die unveränderten IDs; reguläre Live-Werte werden wie bisher über `textContent` gesetzt.
+
 ## Anlage
 
 - Gas-Brennwertkessel **Viessmann Vitocrossal 300**, eingebunden über die **ViCare-Integration**

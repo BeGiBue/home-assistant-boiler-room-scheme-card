@@ -74,6 +74,11 @@ MOCK_JS = """
 """
 
 
+def launch_browser(p):
+    executable = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE")
+    return p.chromium.launch(**({"executable_path": executable} if executable else {}))
+
+
 def render(width, out, topic="", config=None, scale=2, pw=None, height=None):
     from playwright.sync_api import sync_playwright
 
@@ -85,7 +90,7 @@ def render(width, out, topic="", config=None, scale=2, pw=None, height=None):
         '--card-background-color:#fff"></body></html>'
     )
     with sync_playwright() as p:
-        b = p.chromium.launch()
+        b = launch_browser(p)
         pg = b.new_page(viewport={"width": int(width), "height": int(height or 900)}, device_scale_factor=scale)
         pg.on("pageerror", lambda e: print("PAGEERROR", str(e)[:400], file=sys.stderr))
         pg.set_content(html)

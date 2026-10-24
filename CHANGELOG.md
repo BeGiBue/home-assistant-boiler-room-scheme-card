@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.8
+
+- Sicherheitskorrektur: Entitäts-IDs werden in beiden Layouts vor dem Einsetzen in SVG-Attribute maskiert.
+- Sicherheitskorrektur: Zahlen und Einheiten im Speicherdiagramm werden als Text behandelt; HTML aus Entitätsattributen wird nicht mehr als Markup interpretiert.
+- Repository-Link und HACS-Ressourcenpfad im Dateikopf sowie der Dokumentationslink der Karte auf den aktuellen Repository-Namen korrigiert.
+- Browser-Regressionstests für HTML-Injection, beide Layouts und Entitätsklicks ergänzt.
+
 ## 1.0.7
 
 - Neue, im Browser erstellte Vorschauen aus dem unveränderten Original-Code in der README.

@@ -59,6 +59,8 @@ Oder von Hand:
 
 HACS legt die Ressource automatisch an.
 
+Falls die Ressource manuell eingetragen werden muss: `/hacsfiles/home-assistant-boiler-room-scheme-card/heizungsanlage-card.js`, Typ **JavaScript-Modul**.
+
 ### Manuell
 
 1. `dist/heizungsanlage-card.js` nach `/config/www/` kopieren.
