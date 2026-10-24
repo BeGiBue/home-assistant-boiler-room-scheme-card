@@ -3,12 +3,20 @@
  * Gas-/Ölheizung mit Warmwasserspeicher, Pumpen, Wasserzähler (optional Gaszähler & Enthärtung)
  * Alles wird als SVG gezeichnet: scharf auf jedem Display, keine Hintergrundbilder nötig.
  *
- * Repository: https://github.com/BeGiBue/heizungskeller-schema
- *   resources: - url: /hacsfiles/heizungskeller-schema/heizungsanlage-card.js   type: module
+ * Repository: https://github.com/BeGiBue/home-assistant-boiler-room-scheme-card
+ *   resources: - url: /hacsfiles/home-assistant-boiler-room-scheme-card/heizungsanlage-card.js   type: module
  *   card:      type: custom:heizungsanlage-card   (Einstellungen über den visuellen Editor)
  */
 
-const CARD_VERSION = '1.0.7';
+const CARD_VERSION = '1.0.8';
+
+// Maskiert dynamische Texte und Werte in doppelt zitierten HTML-/SVG-Attributen.
+const esc = (value) => String(value)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
 
 // Geräte-Grafiken (freigestellt, eingebettet – keine externen Dateien nötig)
 const IMG = {
@@ -293,7 +301,6 @@ class HeizungsanlageCard extends HTMLElement {
   _svgWide() {
     const E = this._config.entities;
     const cfg = this._config;
-    const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     const line = (id, d, col) =>
       `<g class="line" id="ln-${id}"><path class="pipe" d="${d}" stroke="${C[col]}" marker-end="url(#ar-${col})"/><path class="flow" d="${d}"/></g>`;
@@ -316,7 +323,7 @@ class HeizungsanlageCard extends HTMLElement {
       .map((a) => `<path transform="rotate(${a})" d="M0,-4 C4,-12 14,-19 25,-17 C21,-9 13,-3 5,3 Z" fill="url(#gBlade)"/>`)
       .join('');
     const pump = (id, x, y, ent) =>
-      `<g class="pump clk" id="pm-${id}" transform="translate(${x},${y})" data-entity="${ent || ''}">
+      `<g class="pump clk" id="pm-${id}" transform="translate(${x},${y})" data-entity="${esc(ent || '')}">
          <rect x="-62" y="-14" width="30" height="28" rx="5" fill="#37474f"/>
          <rect x="32" y="-14" width="30" height="28" rx="5" fill="#37474f"/>
          <rect x="-54" y="-17" width="7" height="34" rx="2" fill="#78909c"/>
@@ -337,7 +344,7 @@ class HeizungsanlageCard extends HTMLElement {
         <text class="h" x="${x + 14}" y="${y + 31}">${title}</text>`;
       rows.forEach((r, i) => {
         const yy = y + 64 + i * 32;
-        s += `<g class="clk" data-entity="${r.ent || ent || ''}">
+        s += `<g class="clk" data-entity="${esc(r.ent || ent || '')}">
           <text class="s" x="${x + 14}" y="${yy}">${r.label}</text>
           ${r.plain ? `<text class="v" id="${r.id}" x="${x + w - 14}" y="${yy}" text-anchor="end">–</text>` : numUnit(r.id, gid, x + w - 14, yy, '', align)}</g>`;
       });
@@ -372,7 +379,7 @@ class HeizungsanlageCard extends HTMLElement {
       { l: 'Brennerstarts', id: 'v-starts', ent: E.burner_starts },
     ]
       .map(
-        (c, i) => `<g class="clk" data-entity="${c.ent || ''}" transform="translate(${210 + i * 292},1092)">
+        (c, i) => `<g class="clk" data-entity="${esc(c.ent || '')}" transform="translate(${210 + i * 292},1092)">
           <rect class="cell" width="284" height="60" rx="10"/>
           <text class="s" x="12" y="22" style="font-size:14px">${c.l}</text>
           <text class="v" id="${c.id}" x="12" y="49" style="font-size:20px">–</text></g>`
@@ -395,7 +402,7 @@ class HeizungsanlageCard extends HTMLElement {
       setDefs
         .map(([l, id, ent], i) => {
           const x = 210 + i * (cw + 8);
-          return `<g class="clk" data-entity="${ent || ''}">
+          return `<g class="clk" data-entity="${esc(ent || '')}">
             <rect class="cell" x="${x}" y="1160" width="${cw}" height="60" rx="10"/>
             <text class="s" x="${x + 12}" y="1182" style="font-size:14px">${l}</text>
             <text class="v" id="${id}" x="${x + 12}" y="1209" style="font-size:20px">–</text></g>`;
@@ -444,7 +451,7 @@ class HeizungsanlageCard extends HTMLElement {
   ${line('cold-t', 'M923,860 V666', 'blue')}
 
   <!-- ================= Heizkörper ================= -->
-  <g class="clk" data-entity="${E.supply_temp || ''}">
+  <g class="clk" data-entity="${esc(E.supply_temp || '')}">
     ${radiator(1180, 262, 170)}
     <rect class="box" x="1190" y="392" width="180" height="44" rx="12"/>
     <text class="s" x="1204" y="420">Vorlauf</text>
@@ -456,10 +463,10 @@ class HeizungsanlageCard extends HTMLElement {
 
   <!-- ================= Gaszähler ================= -->
   ${gasBox}
-  <g class="clk" data-entity="${E.gas_total || ''}">${imgTag('gas', 48, 445, 113)}</g>
+  <g class="clk" data-entity="${esc(E.gas_total || '')}">${imgTag('gas', 48, 445, 113)}</g>
 
   <!-- ================= Kessel: Viessmann Vitocrossal 300 ================= -->
-  <g class="boiler clk" id="boiler" data-entity="${E.burner_active || ''}">
+  <g class="boiler clk" id="boiler" data-entity="${esc(E.burner_active || '')}">
     ${imgTag('boiler', 341, 402, 141)}
     <rect x="400" y="527" width="66" height="80" rx="7" fill="#120604" stroke="#aab2bb" stroke-opacity=".35" stroke-width="1.5"/>
     <rect class="win-glow" x="400" y="527" width="66" height="80" rx="7" fill="url(#gWinGlow)"/>
@@ -470,20 +477,20 @@ class HeizungsanlageCard extends HTMLElement {
       </g>
     </g>
   </g>
-  <g class="clk" data-entity="${E.boiler_temp || ''}">
+  <g class="clk" data-entity="${esc(E.boiler_temp || '')}">
     <rect class="box" x="434" y="686" width="290" height="152" rx="14"/>
     <g id="chart-burner"></g>
   </g>
-  <g class="clk" data-entity="${E.burner_modulation || ''}">
+  <g class="clk" data-entity="${esc(E.burner_modulation || '')}">
     ${numUnit('v-mod', 'burner', 710, 741, 'font-size:21px;fill:#e08a00')}</g>
-  <g class="clk" data-entity="${E.boiler_temp || ''}">
+  <g class="clk" data-entity="${esc(E.boiler_temp || '')}">
     ${numUnit('v-boiler', 'burner', 710, 783, 'font-size:21px;fill:#e53935')}</g>
 
   <!-- ================= Ladepumpe ================= -->
   ${pump('chg', 689, 500, E.charge_pump)}
 
   <!-- ================= Warmwasserspeicher: Viessmann Vitocell 100-V ================= -->
-  <g class="clk" data-entity="${E.tank_temp || ''}">
+  <g class="clk" data-entity="${esc(E.tank_temp || '')}">
     ${imgTag('tank', 858, 400, 130)}
     <rect x="893" y="451" width="60" height="171" rx="12" fill="#0d1117" stroke="#aab2bb" stroke-opacity=".3" stroke-width="1.5"/>
     <g clip-path="url(#winClip)">
@@ -512,18 +519,18 @@ class HeizungsanlageCard extends HTMLElement {
 
   <!-- ================= Wasserzähler & Enthärtung ================= -->
   ${waterBox}
-  <g class="clk" data-entity="${E.water_flow || ''}">${imgTag('wm', 22, 817, 120)}</g>
-  <g class="clk" data-entity="${E.softener_regeneration || ''}">${imgTag('soft', 278, 789, 50.4)}</g>
+  <g class="clk" data-entity="${esc(E.water_flow || '')}">${imgTag('wm', 22, 817, 120)}</g>
+  <g class="clk" data-entity="${esc(E.softener_regeneration || '')}">${imgTag('soft', 278, 789, 50.4)}</g>
   ${softBox}
 
   <!-- ================= Kaltwasser-Temperatur ================= -->
-  ${E.water_temp ? `<g class="clk" data-entity="${E.water_temp}">
+  ${E.water_temp ? `<g class="clk" data-entity="${esc(E.water_temp)}">
     <rect class="box" x="20" y="768" width="205" height="38" rx="12"/>
     <text class="s" x="32" y="793">Kaltwasser</text>
     <text class="v" id="v-cold" x="213" y="793" text-anchor="end">–</text></g>` : ''}
 
   <!-- ================= Verlauf Speichertemperatur ================= -->
-  <g class="clk" data-entity="${E.tank_temp || ''}">
+  <g class="clk" data-entity="${esc(E.tank_temp || '')}">
     <rect class="box" x="950" y="686" width="312" height="152" rx="14"/>
     ${numUnit('v-tank', 'tank', 1248, 761, 'font-size:24px')}
     <g id="chart"></g>
@@ -543,7 +550,6 @@ class HeizungsanlageCard extends HTMLElement {
   _svgNarrow() {
     const E = this._config.entities;
     const cfg = this._config;
-    const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const open = this._open || null;
 
     const line = (id, d, col) =>
@@ -554,13 +560,13 @@ class HeizungsanlageCard extends HTMLElement {
     };
     const imgH = (key, w) => (w * IMG[key].h) / IMG[key].w;
     const pump = (id, x, y, s, ent) =>
-      `<g class="pump clk" id="pm-${id}" transform="translate(${x},${y}) scale(${s})" data-entity="${ent || ''}">${PUMP_INNER}</g>`;
+      `<g class="pump clk" id="pm-${id}" transform="translate(${x},${y}) scale(${s})" data-entity="${esc(ent || '')}">${PUMP_INNER}</g>`;
 
     const boiler = (x, y, w) => {
       const h = imgH('boiler', w);
       const k = w / 141;
       const wx = x + 0.42 * w, wy = y + 0.47 * h, ww = 0.47 * w, wh = 0.30 * h;
-      return `<g class="boiler clk" id="boiler" data-entity="${E.burner_active || ''}">
+      return `<g class="boiler clk" id="boiler" data-entity="${esc(E.burner_active || '')}">
         ${img('boiler', x, y, w)}
         <rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="${7 * k}" fill="#120604" stroke="#aab2bb" stroke-opacity=".35" stroke-width="1"/>
         <rect class="win-glow" x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="${7 * k}" fill="url(#gWinGlow)"/>
@@ -576,7 +582,7 @@ class HeizungsanlageCard extends HTMLElement {
       const h = imgH('tank', w);
       const X = (f) => x + f * w, Y = (f) => y + f * h;
       const ix = X(0.31), iw = 0.38 * w, iy = Y(0.205), ih = 0.62 * h;
-      return `<g class="clk" data-entity="${E.tank_temp || ''}">
+      return `<g class="clk" data-entity="${esc(E.tank_temp || '')}">
         ${img('tank', x, y, w)}
         <rect x="${X(0.27)}" y="${Y(0.19)}" width="${0.46 * w}" height="${0.65 * h}" rx="${w * 0.09}" fill="#0d1117" stroke="#aab2bb" stroke-opacity=".3" stroke-width="1"/>
         <clipPath id="tclip"><rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="${w * 0.06}"/></clipPath>
@@ -604,7 +610,7 @@ class HeizungsanlageCard extends HTMLElement {
 
     // Einheitliche Werte-Boxen im Schema: gleiche Höhe und Schriftgrößen (Beschriftung 13, Wert 20)
     const valChip = (x, y, w, label, id, ent, col) =>
-      `<g class="clk" data-entity="${ent || ''}">
+      `<g class="clk" data-entity="${esc(ent || '')}">
          <rect class="box" x="${x}" y="${y}" width="${w}" height="52" rx="10"/>
          <text class="s" x="${x + 10}" y="${y + 17}" style="font-size:13px">${label}</text>
          <text class="v" id="${id}" x="${x + 10}" y="${y + 42}" style="font-size:20px;${col ? 'fill:' + col : ''}">–</text></g>`;
@@ -618,7 +624,7 @@ class HeizungsanlageCard extends HTMLElement {
     s += line('cold-b', 'M250,450 H96 V358', 'blue') + line('cold', 'M250,450 H560 V318', 'blue');
     s += line('cold-t', 'M385,450 V358', 'blue') + line('cold-in', 'M494,535 H250 V454', 'blue');
     s += line('gas', 'M58,490 V358', 'yellow');
-    s += `<g class="clk" data-entity="${E.supply_temp || ''}">${radiator(440, 36, 140)}</g>`;
+    s += `<g class="clk" data-entity="${esc(E.supply_temp || '')}">${radiator(440, 36, 140)}</g>`;
     s += pump('heat', 257, 64, 0.6, E.heating_pump) + pump('chg', 257, 245, 0.6, E.charge_pump) + pump('circ', 488, 245, 0.6, E.dhw_circ_pump);
     s += boiler(46, 171.5, 100) + tank(339, 170.3, 92) + tap(540, 245, 0.85);
     s += `<g class="clk" data-topic="gas">${img('gas', 18, 484, 80)}
@@ -662,7 +668,7 @@ class HeizungsanlageCard extends HTMLElement {
     const py = by + 124;
     const tile = (x, y, w, h) => `<rect class="box" x="${x}" y="${y}" width="${w}" height="${h}" rx="14"/>`;
     const cell = (x, y, w, label, id, ent, h = 54) =>
-      `<g class="clk" data-entity="${ent || ''}"><rect class="cell" x="${x}" y="${y}" width="${w}" height="${h}" rx="10"/>
+      `<g class="clk" data-entity="${esc(ent || '')}"><rect class="cell" x="${x}" y="${y}" width="${w}" height="${h}" rx="10"/>
         <text class="s" x="${x + 12}" y="${y + 19}" style="font-size:14px">${label}</text>
         <text class="v" id="${id}" x="${x + 12}" y="${y + h - 8}" style="font-size:20px">–</text></g>`;
     const infoTile = (y, h, title, rows, key, iw, align = '') => {
@@ -671,7 +677,7 @@ class HeizungsanlageCard extends HTMLElement {
       let t = tile(10, y, 580, h) + `<text class="h" x="24" y="${y + 30}">${title}</text>` + img(key, 590 - w2 - 14, y + 6, w2);
       rows.forEach((r, i) => {
         const yy = y + 84 + i * 30;
-        t += `<g class="clk" data-entity="${r[3] || ''}"><text class="s" x="24" y="${yy}">${r[0]}</text>${r[4] ? `<text class="v" id="${r[1]}" x="576" y="${yy}" text-anchor="end">–</text>` : numUnit(r[1], 'it-' + title, 576, yy, '', align)}</g>`;
+        t += `<g class="clk" data-entity="${esc(r[3] || '')}"><text class="s" x="24" y="${yy}">${r[0]}</text>${r[4] ? `<text class="v" id="${r[1]}" x="576" y="${yy}" text-anchor="end">–</text>` : numUnit(r[1], 'it-' + title, 576, yy, '', align)}</g>`;
       });
       return t;
     };
@@ -687,13 +693,13 @@ class HeizungsanlageCard extends HTMLElement {
         tile(10, py, 580, th) +
         `<text class="h" x="24" y="${py + 30}">Brenner</text>
          <text class="s" x="574" y="${py + 30}" text-anchor="end" style="font-size:14px"><tspan style="fill:#e08a00">● Modulation</tspan><tspan dx="14" style="fill:#e53935">● Kesseltemperatur</tspan></text>
-         <g class="clk" data-entity="${E.boiler_temp || ''}"><g id="chart-burner" data-x0="${g1.x0}" data-x1="${g1.x1}" data-y0="${g1.y0}" data-y1="${g1.y1}"></g></g>
-         <g class="clk" data-entity="${E.burner_modulation || ''}">${numUnit('v-mod', 'burner', 574, py + 90, 'font-size:24px;fill:#e08a00')}</g>
-         <g class="clk" data-entity="${E.boiler_temp || ''}">${numUnit('v-boiler-d', 'burner', 574, py + 128, 'font-size:24px;fill:#e53935')}</g>` +
+         <g class="clk" data-entity="${esc(E.boiler_temp || '')}"><g id="chart-burner" data-x0="${g1.x0}" data-x1="${g1.x1}" data-y0="${g1.y0}" data-y1="${g1.y1}"></g></g>
+         <g class="clk" data-entity="${esc(E.burner_modulation || '')}">${numUnit('v-mod', 'burner', 574, py + 90, 'font-size:24px;fill:#e08a00')}</g>
+         <g class="clk" data-entity="${esc(E.boiler_temp || '')}">${numUnit('v-boiler-d', 'burner', 574, py + 128, 'font-size:24px;fill:#e53935')}</g>` +
         tile(10, t2, 580, th) +
         `<text class="h" x="24" y="${t2 + 30}">Warmwasserspeicher</text>
          <text class="s" x="574" y="${t2 + 30}" text-anchor="end" style="font-size:14px"><tspan style="fill:#fb8c00">··· Soll</tspan><tspan dx="14" style="fill:#8e8e93">– – Grenzwerte</tspan></text>
-         <g class="clk" data-entity="${E.tank_temp || ''}"><g id="chart" data-x0="${g2.x0}" data-x1="${g2.x1}" data-y0="${g2.y0}" data-y1="${g2.y1}" data-xr="574"></g>
+         <g class="clk" data-entity="${esc(E.tank_temp || '')}"><g id="chart" data-x0="${g2.x0}" data-x1="${g2.x1}" data-y0="${g2.y0}" data-y1="${g2.y1}" data-xr="574"></g>
          ${numUnit('v-tank-d', 'tank', 574, t2 + 103, 'font-size:26px')}</g>`;
 
     } else if (open === 'gas') {
@@ -1228,8 +1234,8 @@ class HeizungsanlageCard extends HTMLElement {
       const { n, u } = this._splitUnit(this._fmtVal(v, unit, 1, 1));
       const st = `font-size:16px;fill:${color}`;
       return (
-        `<text class="v" id="${id}" data-ug="tank" data-uid="${id}-u" data-r="${XR}" x="${XR}" y="${y}" text-anchor="end" style="${st}">${n}</text>` +
-        `<text class="v" id="${id}-u" x="${XR}" y="${y}" text-anchor="start" style="${st}">${u}</text>`
+        `<text class="v" id="${id}" data-ug="tank" data-uid="${id}-u" data-r="${XR}" x="${XR}" y="${y}" text-anchor="end" style="${st}">${esc(n)}</text>` +
+        `<text class="v" id="${id}-u" x="${XR}" y="${y}" text-anchor="start" style="${st}">${esc(u)}</text>`
       );
     };
     s += pair('ch-max', Y0 + 14, '#e53935', pMax.v);
@@ -1604,7 +1610,7 @@ window.customCards.push({
   name: 'Heizungsanlage',
   description: 'Anlagenschema für Gas-/Ölheizung mit Warmwasserspeicher, Pumpen und Wasserzähler',
   preview: true,
-  documentationURL: 'https://github.com/BeGiBue/heizungskeller-schema',
+  documentationURL: 'https://github.com/BeGiBue/home-assistant-boiler-room-scheme-card',
 });
 
 console.info(

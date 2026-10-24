@@ -8,7 +8,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from harness import CARD, STATES  # noqa: E402
+from harness import CARD, STATES, launch_browser  # noqa: E402
 
 TEST_JS = """
 async () => {
@@ -146,7 +146,7 @@ def main():
             fails.append(name)
 
     with sync_playwright() as p:
-        b = p.chromium.launch()
+        b = launch_browser(p)
         pg = b.new_page()
         errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
