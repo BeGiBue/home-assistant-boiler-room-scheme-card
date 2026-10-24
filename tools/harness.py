@@ -6,7 +6,7 @@ Beispiele:
   python3 tools/harness.py --width 390 --topic gas --out tools/out/gas.png
   python3 tools/harness.py --docs                      # Vorschaubilder für docs/ neu erzeugen
 
-Benötigt: pip install playwright pillow  und  playwright install chromium
+Benötigt: pip install -r requirements-dev.txt  und  playwright install chromium
 """
 import argparse
 import os

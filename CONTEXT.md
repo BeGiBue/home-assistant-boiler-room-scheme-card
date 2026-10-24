@@ -4,6 +4,27 @@ Diese Datei hält fest, was über die Anlage und die verwendeten Entitäten beka
 Ausgangspunkt für weitere Änderungen an der Karte (`dist/heizungsanlage-card.js`).
 In Claude Code wird sie automatisch geladen, wenn sie in `CLAUDE.md` umbenannt oder dort verlinkt wird.
 
+## HACS-Meilenstein 2.0.0
+
+Die Major-Version 2.0.0 dokumentiert die Aufnahme in den offiziellen HACS-Katalog und die Migration
+bestehender Custom-Repository-Installationen. Sie bedeutet nicht automatisch Breaking Changes.
+Kartentyp `custom:heizungsanlage-card`, Standard-Entitäten und Konfigurationsschlüssel bleiben erhalten.
+Für den Katalogwechsel nur den benutzerdefinierten Repository-Eintrag entfernen, die bestehende
+Installation und Dashboard-Ressource nicht deinstallieren. Die README beschreibt reguläre HACS-Suche,
+Migration, Voraussetzungen und Grenzen. Der Security-Review wird in `SECURITY_REVIEW.md` festgehalten.
+
+Der vorhandene Release-Workflow veröffentlicht bei Push auf `main` automatisch; der vorbereitende
+Pull Request darf erst nach ausdrücklicher Veröffentlichungsfreigabe gemergt werden.
+
+## Sichere Diagramme (seit 2.0.0)
+
+Die Skalenberechnung verwendet eine adaptive Schrittweite, eine feste Iterationsgrenze und Prüfungen
+auf endliche, fortschreitende Werte. Nicht endliche Recorder-/Livewerte werden verworfen.
+Minima/Maxima großer Verläufe werden ohne Funktionsargument-Spread berechnet.
+Die Standard-Entitäten und regulären Skalen bleiben erhalten; numerische Security-Regressionen
+stehen in `tools/test_numeric_security.mjs`. Entwicklungswerkzeuge werden über
+`requirements-dev.txt` installiert und nicht an HACS-Nutzer ausgeliefert.
+
 ## Sichere Textausgabe (seit 1.0.8)
 
 Entitätszustände, Einheiten und Konfigurationswerte sind keine vertrauenswürdigen HTML-Inhalte.
