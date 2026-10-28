@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+- Aufräumarbeiten ohne Funktionsänderung: ungenutzten Code (alte Status-Pillen, nicht mehr verwendete Gestaltungsregeln und ein ungenutzter Farbverlauf) entfernt, doppelt vorhandene Bausteine von breitem und kompaktem Layout (Pumpe, Leitungen, Bilder, Logo, Farben und Pfeile) sowie Spracherkennung, Zahlenformatierung und Editor-Optionen zusammengeführt. Darstellung, Konfiguration und Verhalten bleiben unverändert (42 Ansichten pixelgleich geprüft).
+- Repository verschlankt: nicht benötigte Logo-Dateien und die Release-Notes-Dateien entfernt, Entwicklungs- und Release-Abschnitte aus der README genommen, Security-Review gekürzt.
+
 ## 2.0.0
 
 - Aufnahme in den offiziellen HACS-Katalog; reguläre Installation über die HACS-Suche beschrieben.
