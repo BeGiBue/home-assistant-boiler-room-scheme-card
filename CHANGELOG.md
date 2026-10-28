@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+- Aufräumarbeiten ohne Funktionsänderung: ungenutzten Code (alte Status-Pillen, nicht mehr verwendete Gestaltungsregeln und ein ungenutzter Farbverlauf) entfernt, doppelt vorhandene Bausteine von breitem und kompaktem Layout (Pumpe, Leitungen, Bilder, Logo, Farben und Pfeile) sowie Spracherkennung, Zahlenformatierung und Editor-Optionen zusammengeführt. Darstellung, Konfiguration und Verhalten bleiben unverändert (42 Ansichten pixelgleich geprüft).
+- Repository verschlankt: nicht benötigte Logo-Dateien und die Release-Notes-Dateien entfernt, Entwicklungs- und Release-Abschnitte aus der README genommen, Security-Review entfernt.
+
 ## 2.0.0
 
 - Aufnahme in den offiziellen HACS-Katalog; reguläre Installation über die HACS-Suche beschrieben.
@@ -9,7 +14,7 @@
 - Sicherheitskorrektur: adaptive und begrenzte Diagrammskalen verhindern Browser-Blockaden durch extreme Recorder-Werte; nicht endliche Live-/Verlaufswerte und Umrechnungsüberläufe werden verworfen.
 - Sicherheitskorrektur: sehr große Verläufe verursachen bei der Min-/Max-Berechnung keinen JavaScript-Argumentüberlauf mehr.
 - Entwicklungswerkzeuge auf geprüfte Versionen festgelegt; Pillow 13.0.0 ersetzt den verwundbaren lokalen Teststand 12.3.0. Keine zusätzlichen Laufzeitabhängigkeiten der Karte.
-- Security-Review der aktuellen Karte und Sicherheits-Regressionstests; Ergebnisse und verbleibende Prüfgrenzen in `SECURITY_REVIEW.md` dokumentiert.
+- Sicherheits-Regressionstests für die aktuelle Karte ergänzt.
 
 ## 1.0.8
 

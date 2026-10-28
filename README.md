@@ -4,7 +4,7 @@
 
 # Boiler Room Scheme Card
 
-**Version 2.0.0**
+**Version 2.0.1**
 
 Eine Home-Assistant-Karte (`custom:heizungsanlage-card`), die eine Gas-/Ölheizung als
 animiertes Anlagenschema darstellt: Kessel, Warmwasserspeicher, Pumpen, Heizkörper,
@@ -58,17 +58,14 @@ Eine bereits vorhandene Ressource nicht doppelt eintragen.
 
 ### Bestehende Custom-Repository-Installation migrieren
 
-1. Zuerst prüfen, ob **Boiler Room Scheme Card** im offiziellen HACS-Katalog gefunden wird. Falls nicht,
-   HACS aktualisieren und den bisherigen Custom-Repository-Eintrag vorerst behalten.
-2. Unter **HACS → ⋮ → Benutzerdefinierte Repositories** nur den Eintrag für
+1. Prüfen, dass **Boiler Room Scheme Card** im offiziellen HACS-Katalog verfügbar ist.
+2. Danach unter **HACS → ⋮ → Benutzerdefinierte Repositories** nur den Eintrag für
    `BeGiBue/home-assistant-boiler-room-scheme-card` entfernen.
 3. **Die bestehende Installation nicht deinstallieren.** Dashboard-Ressource, Karten und YAML-Konfigurationen beibehalten.
-4. HACS neu laden bzw. **Informationen aktualisieren** und die weiterhin installierte Karte sowie angebotene Updates prüfen.
-5. Nach einem Update das Frontend vollständig neu laden und bestehende Karten prüfen.
+4. HACS neu laden bzw. **Informationen aktualisieren**, angebotene Updates installieren, das Frontend vollständig neu laden und bestehende Karten prüfen.
 
 Die Aufnahme in den offiziellen HACS-Katalog erfordert kein erneutes Anlegen der Karten.
 `type: custom:heizungsanlage-card`, Entitätszuordnungen und vorhandene Konfigurationsschlüssel bleiben erhalten.
-Die Major-Version 2.0.0 markiert diesen Meilenstein und bedeutet **nicht automatisch Breaking Changes**.
 
 ### Manuell
 
@@ -180,34 +177,8 @@ Im Editor werden nur Abweichungen von den Standardwerten in die YAML-Konfigurati
 - Für automatische Gas-/Wasserwerte müssen passende Quellen im Energie-Dashboard eingerichtet sein. Alternativ lassen sich die Zählerentitäten ausdrücklich konfigurieren.
 - Die Karte stellt Zustände dar und öffnet bei Klick den HA-Entitätsdialog. Sie ruft selbst keine Schalt- oder Heizungsdienste auf. Aktionen im Entitätsdialog unterliegen den Berechtigungen der angemeldeten HA-Sitzung.
 - Animationen zeigen die gemeldeten Zustände, keine unabhängig gemessenen Strömungen. Fehlende oder veraltete Sensoren und Recorder-Daten begrenzen die Aussagekraft; die Karte ersetzt keine Anlagenüberwachung.
-- Nicht endliche Messwerte und rechnerisch unbrauchbare Diagrammskalen werden verworfen. Extreme Zahlen können keine endlose Skalenberechnung mehr auslösen; normale Werte und Standardzuordnungen bleiben erhalten.
+- Nicht endliche Messwerte werden verworfen.
 - Die Verläufe (24 h) werden alle 5 Minuten über die Recorder-Datenbank neu geladen; die Entitäten müssen dafür im Verlauf aufgezeichnet werden.
 - Werte werden mit der nativen Formatierung von Home Assistant angezeigt (Sprache, Einheit, Anzeige-Genauigkeit der Entität).
 - Die Gerätegrafiken sind als Bilder in die JavaScript-Datei eingebettet, es werden keine weiteren Dateien nachgeladen.
 - Texte in der Karte sind deutsch; der Editor ist deutsch und englisch.
-
-## Entwicklung
-
-Die Karte besteht aus **einer** Datei, `dist/heizungsanlage-card.js` (kein Build-Schritt). Arbeitsanweisungen für
-Claude Code stehen in `CLAUDE.md`, Anlage, Entitäten und technische Zuordnungen in `CONTEXT.md`.
-
-```bash
-npm run check      # Syntax prüfen
-npm test           # Editor und beide Layouts im Headless-Browser testen (Playwright)
-npm run preview    # Vorschaubilder mit Testdaten nach tools/out/ rendern
-python3 tools/images.py extract   # eingebettete Gerätebilder nach assets/devices/ herausziehen
-python3 tools/images.py embed     # Bilder wieder einbetten
-```
-
-Für Vorschau und Tests: `pip install -r requirements-dev.txt` und `playwright install chromium`.
-In Claude Code stehen dazu die Befehle `/vorschau` und `/release` bereit (`.claude/commands/`).
-
-## Release-Vorbereitung
-
-Änderungen und Migrationshinweise stehen in [CHANGELOG.md](CHANGELOG.md), der vorbereitete Release-Text in
-[RELEASE_NOTES_2.0.0.md](RELEASE_NOTES_2.0.0.md) und die Ergebnisse des Security-Reviews in
-[SECURITY_REVIEW.md](SECURITY_REVIEW.md).
-
-Der vorhandene Release-Workflow veröffentlicht bei einem Push auf `main` automatisch die Version aus `package.json`.
-Einen vorbereitenden Pull Request deshalb erst nach Review, erfolgreichen Prüfungen und ausdrücklicher
-Veröffentlichungsfreigabe mergen. Die Vorbereitung selbst erstellt weder Tag noch Release.

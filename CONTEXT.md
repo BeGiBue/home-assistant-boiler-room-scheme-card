@@ -2,7 +2,6 @@
 
 Diese Datei hält fest, was über die Anlage und die verwendeten Entitäten bekannt ist. Sie dient als
 Ausgangspunkt für weitere Änderungen an der Karte (`dist/heizungsanlage-card.js`).
-In Claude Code wird sie automatisch geladen, wenn sie in `CLAUDE.md` umbenannt oder dort verlinkt wird.
 
 ## HACS-Meilenstein 2.0.0
 
@@ -11,10 +10,10 @@ bestehender Custom-Repository-Installationen. Sie bedeutet nicht automatisch Bre
 Kartentyp `custom:heizungsanlage-card`, Standard-Entitäten und Konfigurationsschlüssel bleiben erhalten.
 Für den Katalogwechsel nur den benutzerdefinierten Repository-Eintrag entfernen, die bestehende
 Installation und Dashboard-Ressource nicht deinstallieren. Die README beschreibt reguläre HACS-Suche,
-Migration, Voraussetzungen und Grenzen. Der Security-Review wird in `SECURITY_REVIEW.md` festgehalten.
+Migration, Voraussetzungen und Grenzen.
 
-Der vorhandene Release-Workflow veröffentlicht bei Push auf `main` automatisch; der vorbereitende
-Pull Request darf erst nach ausdrücklicher Veröffentlichungsfreigabe gemergt werden.
+Der Release-Workflow veröffentlicht bei Push auf `main` automatisch die Version aus `package.json`, sofern es dafür
+noch kein Release gibt; ein Merge mit neuer Version löst also ein Release aus.
 
 ## Sichere Diagramme (seit 2.0.0)
 

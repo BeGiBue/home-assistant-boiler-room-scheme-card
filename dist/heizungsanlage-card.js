@@ -8,7 +8,7 @@
  *   card:      type: custom:heizungsanlage-card   (Einstellungen über den visuellen Editor)
  */
 
-const CARD_VERSION = '2.0.0';
+const CARD_VERSION = '2.0.1';
 
 // Maskiert dynamische Texte und Werte in doppelt zitierten HTML-/SVG-Attributen.
 const esc = (value) => String(value)
@@ -40,6 +40,48 @@ const radiator = (x, y, w) => `<g transform="translate(${x},${y}) scale(${(w / 1
 
 const C = { red: '#e53935', orange: '#fb8c00', blue: '#1e88e5', yellow: '#fbc02d' };
 
+// Leitung mit Pfeil (Farbe aus C) und darüberliegender Fließ-Animation
+const line = (id, d, col) =>
+  `<g class="line" id="ln-${id}"><path class="pipe" d="${d}" stroke="${C[col]}" marker-end="url(#ar-${col})"/><path class="flow" d="${d}"/></g>`;
+
+// Gerätebild aus IMG, Höhe aus dem Seitenverhältnis
+const imgTag = (key, x, y, w) => {
+  const o = IMG[key];
+  return `<image href="${o.d}" x="${x}" y="${y}" width="${w}" height="${((w * o.h) / o.w).toFixed(1)}" preserveAspectRatio="none"/>`;
+};
+
+// Flammen-Logo in der Kopfzeile
+const LOGO = `<path d="M30,0 C34,18 54,26 54,50 C54,66 44,78 30,78 C16,78 6,66 6,52 C6,40 14,34 18,24 C20,32 24,34 26,36 C28,24 26,12 30,0z" fill="#ff7043"/>
+    <path d="M30,36 C33,46 42,50 42,60 C42,69 36,74 30,74 C24,74 18,69 18,61 C18,54 24,50 26,44 C28,48 29,48 30,36z" fill="#ffca28"/>`;
+
+// Brennerflamme im Kesselfenster (Größe wird in _update() nach der Modulation gesetzt)
+const FLAME = `<g id="flame">
+        <path d="M0,0 C-26,-18 -24,-48 0,-76 C8,-54 30,-44 26,-20 C24,-6 12,0 0,0z" fill="#ff6d00"/>
+        <path d="M0,0 C-12,-10 -11,-26 0,-42 C5,-30 15,-26 13,-12 C12,-5 6,0 0,0z" fill="#ffd54f"/>
+      </g>`;
+
+// Wasserhahn mit Tropfen (Entwurfskoordinaten des breiten Layouts)
+const TAP = `<rect x="926" y="342" width="34" height="92" rx="8" fill="#b0bec5" stroke="#78909c" stroke-width="2"/>
+    <rect x="926" y="342" width="34" height="92" rx="8" fill="#eceff1" opacity=".55"/>
+    <path d="M926,350 H958 Q984,350 984,376 V384" fill="none" stroke="#90a4ae" stroke-width="16" stroke-linecap="round"/>
+    <path d="M926,350 H958 Q984,350 984,376 V384" fill="none" stroke="#eceff1" stroke-width="8" stroke-linecap="round"/>
+    <rect x="926" y="326" width="34" height="14" rx="5" fill="#607d8b"/>
+    <g class="drops" id="drops">
+      <circle class="drop" cx="984" cy="398" r="5" fill="#4fc3f7"/>
+      <circle class="drop" cx="984" cy="398" r="5" fill="#4fc3f7"/>
+      <circle class="drop" cx="984" cy="398" r="5" fill="#4fc3f7"/>
+    </g>`;
+
+// Einstellungen (untere Leiste bzw. Bereich „Einstellungen“): Beschriftung, Element-ID, Schlüssel in entities
+const SETTINGS = [
+  ['Komforttemperatur', 'v-set-comfort', 'comfort_temp'],
+  ['Normaltemperatur', 'v-set-normal', 'normal_temp'],
+  ['Reduzierte Temperatur', 'v-set-reduced', 'reduced_temp'],
+  ['Warmwasser Soll', 'v-set-target', 'tank_target'],
+  ['Verschiebung Heizkurve', 'v-set-shift', 'curve_shift'],
+  ['Steigung Heizkurve', 'v-set-slope', 'curve_slope'],
+];
+
 // Umrechnungsfaktoren in die Anzeige-Einheit (Schlüssel: Einheit der Entität, kleingeschrieben)
 const UNIT_FACTORS = {
   'm³': { 'm³': 1, m3: 1, l: 0.001, ml: 0.000001 },
@@ -53,7 +95,7 @@ const numUnit = (id, group, x, y, style = '', align = '') =>
   `<text class="v" id="${id}" data-ug="${group}" data-uid="${id}-u" data-r="${x}"${align ? ` data-ua="${align}"` : ''} x="${x}" y="${y}" text-anchor="end" style="${style}">–</text>` +
   `<text class="v" id="${id}-u" x="${x}" y="${y}" text-anchor="start" style="${style}"></text>`;
 
-// Gezeichnete Umwälzpumpe (Achse = y 0), wird in der kompakten Ansicht skaliert verwendet
+// Gezeichnete Umwälzpumpe (Frontansicht, Rohrachse = y 0); das Laufrad ("impeller") dreht sich, solange die Pumpe läuft
 const PUMP_INNER = (() => {
   const blades = [0, 60, 120, 180, 240, 300]
     .map((a) => `<path transform="rotate(${a})" d="M0,-4 C4,-12 14,-19 25,-17 C21,-9 13,-3 5,3 Z" fill="url(#gBlade)"/>`)
@@ -246,10 +288,7 @@ class HeizungsanlageCard extends HTMLElement {
       .s  { fill: var(--secondary-text-color); font-size: 18px; }
       .v  { font-weight: 600; font-size: 20px; }
       .h  { font-weight: 700; font-size: 21px; }
-      .h2 { font-weight: 700; font-size: 18px; }
       .big{ font-weight: 700; font-size: 58px; letter-spacing: -1px; }
-      .cv { font-weight: 700; font-size: 26px; }
-      .cl { fill: var(--secondary-text-color); font-size: 17px; }
       .tick { fill: var(--secondary-text-color); font-size: 14px; }
       .box  { fill: var(--secondary-background-color, #f3f3f3); stroke: var(--divider-color, #dcdcdc); stroke-width: 1.5; }
       .cell { fill: var(--card-background-color, #fff); stroke: var(--divider-color, #dcdcdc); stroke-width: 1; }
@@ -267,12 +306,6 @@ class HeizungsanlageCard extends HTMLElement {
       .impeller { transform-box: fill-box; transform-origin: center; }
       .pump.on .impeller { animation: spin 1s linear infinite; }
       @keyframes spin { to { transform: rotate(360deg); } }
-
-      /* Status-Pillen */
-      .st rect { fill: var(--card-background-color, #fff); stroke: var(--divider-color, #dcdcdc); stroke-width: 1.5; }
-      .st circle { fill: #9aa0b5; }
-      .st.on circle { fill: #43a047; }
-      .st text { font-size: 18px; font-weight: 600; }
 
       /* Brenner */
       .win-glow { opacity: 0; transition: opacity .5s; }
@@ -302,40 +335,8 @@ class HeizungsanlageCard extends HTMLElement {
     const E = this._config.entities;
     const cfg = this._config;
 
-    const line = (id, d, col) =>
-      `<g class="line" id="ln-${id}"><path class="pipe" d="${d}" stroke="${C[col]}" marker-end="url(#ar-${col})"/><path class="flow" d="${d}"/></g>`;
-
-    const pill = (id, x, y) =>
-      `<g class="st" id="st-${id}" transform="translate(${x},${y})">
-         <rect x="-40" y="-17" width="80" height="28" rx="14"/>
-         <circle cx="-21" cy="-3" r="6"/>
-         <text x="-9" y="4" id="stt-${id}">Aus</text>
-       </g>`;
-
-    const imgTag = (key, x, y, w) => {
-      const o = IMG[key];
-      return `<image href="${o.d}" x="${x}" y="${y}" width="${w}" height="${((w * o.h) / o.w).toFixed(1)}" preserveAspectRatio="none"/>`;
-    };
-
-    // Stilisierte Umwälzpumpe (Frontansicht). Die Rohrachse liegt exakt auf y = 0,
-    // das Laufrad ("impeller") dreht sich, solange die Pumpe läuft.
-    const blades = [0, 60, 120, 180, 240, 300]
-      .map((a) => `<path transform="rotate(${a})" d="M0,-4 C4,-12 14,-19 25,-17 C21,-9 13,-3 5,3 Z" fill="url(#gBlade)"/>`)
-      .join('');
     const pump = (id, x, y, ent) =>
-      `<g class="pump clk" id="pm-${id}" transform="translate(${x},${y})" data-entity="${esc(ent || '')}">
-         <rect x="-62" y="-14" width="30" height="28" rx="5" fill="#37474f"/>
-         <rect x="32" y="-14" width="30" height="28" rx="5" fill="#37474f"/>
-         <rect x="-54" y="-17" width="7" height="34" rx="2" fill="#78909c"/>
-         <rect x="47" y="-17" width="7" height="34" rx="2" fill="#78909c"/>
-         <rect x="-13" y="-56" width="26" height="22" rx="5" fill="#1f2528"/>
-         <rect x="-13" y="34" width="26" height="22" rx="5" fill="#1f2528"/>
-         <circle r="40" fill="url(#gPump)" stroke="#8e1b10" stroke-width="2.5"/>
-         <circle r="30" fill="#1b2125" stroke="#ff8a65" stroke-width="2"/>
-         <circle r="26" fill="none" stroke="#3a454b" stroke-width="1"/>
-         <g class="impeller"><circle r="26" fill="none"/>${blades}</g>
-         <circle r="5.5" fill="#eceff1" stroke="#90a4ae" stroke-width="1"/>
-       </g>`;
+      `<g class="pump clk" id="pm-${id}" transform="translate(${x},${y})" data-entity="${esc(ent || '')}">${PUMP_INNER}</g>`;
 
     const infoBox = (x, y, w, title, rows, ent, align = '') => {
       const h = 46 + rows.length * 32;
@@ -386,23 +387,15 @@ class HeizungsanlageCard extends HTMLElement {
       )
       .join('');
 
-    const setDefs = [
-      ['Komforttemperatur', 'v-set-comfort', E.comfort_temp],
-      ['Normaltemperatur', 'v-set-normal', E.normal_temp],
-      ['Reduzierte Temperatur', 'v-set-reduced', E.reduced_temp],
-      ['Warmwasser Soll', 'v-set-target', E.tank_target],
-      ['Verschiebung Heizkurve', 'v-set-shift', E.curve_shift],
-      ['Steigung Heizkurve', 'v-set-slope', E.curve_slope],
-    ];
     const cw = 186;
     const sets =
       `<rect class="box" x="20" y="1080" width="1360" height="152" rx="16"/>
        <text class="h" x="42" y="1129" style="font-size:22px">Status</text>
        <text class="h" x="42" y="1197" style="font-size:22px">Einstellungen</text>` +
-      setDefs
-        .map(([l, id, ent], i) => {
+      SETTINGS
+        .map(([l, id, key], i) => {
           const x = 210 + i * (cw + 8);
-          return `<g class="clk" data-entity="${esc(ent || '')}">
+          return `<g class="clk" data-entity="${esc(E[key] || '')}">
             <rect class="cell" x="${x}" y="1160" width="${cw}" height="60" rx="10"/>
             <text class="s" x="${x + 12}" y="1182" style="font-size:14px">${l}</text>
             <text class="v" id="${id}" x="${x + 12}" y="1209" style="font-size:20px">–</text></g>`;
@@ -411,26 +404,11 @@ class HeizungsanlageCard extends HTMLElement {
 
     return `
 <svg class="wide${cfg.fit_screen !== false ? ' fit' : ''}" style="--fit-offset:${Number.isFinite(Number(cfg.screen_offset)) ? Number(cfg.screen_offset) : 32}px" viewBox="0 0 1400 1150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Heizungsanlage">
-  <defs>
-    ${['red', 'orange', 'blue', 'yellow']
-      .map(
-        (k) =>
-          `<marker id="ar-${k}" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="22" markerHeight="22" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="${C[k]}"/></marker>`
-      )
-      .join('')}
-    <radialGradient id="gPump" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#ff8a50"/><stop offset=".6" stop-color="#e53b1c"/><stop offset="1" stop-color="#a51b0b"/></radialGradient>
-    <linearGradient id="gBlade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffab91"/><stop offset="1" stop-color="#ff5722"/></linearGradient>
-    <linearGradient id="gHot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5722"/><stop offset="1" stop-color="#ffa726"/></linearGradient>
-    <linearGradient id="gCold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fc3f7"/><stop offset="1" stop-color="#1565c0"/></linearGradient>
-    <radialGradient id="gGlow"><stop offset="0" stop-color="#43a047" stop-opacity=".55"/><stop offset="1" stop-color="#43a047" stop-opacity="0"/></radialGradient>
-    <radialGradient id="gWinGlow" cx="50%" cy="85%" r="70%"><stop offset="0" stop-color="#ff6d00" stop-opacity=".75"/><stop offset="1" stop-color="#3e0d02" stop-opacity="0"/></radialGradient>
-    <clipPath id="winClip"><rect x="898" y="456" width="50" height="161" rx="8"/></clipPath>
-  </defs>
+  ${this._defs()}
 
   <!-- Kopf -->
   <g transform="translate(26,6) scale(1.25)">
-    <path d="M30,0 C34,18 54,26 54,50 C54,66 44,78 30,78 C16,78 6,66 6,52 C6,40 14,34 18,24 C20,32 24,34 26,36 C28,24 26,12 30,0z" fill="#ff7043"/>
-    <path d="M30,36 C33,46 42,50 42,60 C42,69 36,74 30,74 C24,74 18,69 18,61 C18,54 24,50 26,44 C28,48 29,48 30,36z" fill="#ffca28"/>
+    ${LOGO}
   </g>
   <text class="big" x="118" y="66">${esc(cfg.title)}</text>
   <text class="s" x="120" y="100" style="font-size:23px">${esc(cfg.subtitle || '')}</text>
@@ -471,10 +449,7 @@ class HeizungsanlageCard extends HTMLElement {
     <rect x="400" y="527" width="66" height="80" rx="7" fill="#120604" stroke="#aab2bb" stroke-opacity=".35" stroke-width="1.5"/>
     <rect class="win-glow" x="400" y="527" width="66" height="80" rx="7" fill="url(#gWinGlow)"/>
     <g transform="translate(433,601) scale(.96)">
-      <g id="flame">
-        <path d="M0,0 C-26,-18 -24,-48 0,-76 C8,-54 30,-44 26,-20 C24,-6 12,0 0,0z" fill="#ff6d00"/>
-        <path d="M0,0 C-12,-10 -11,-26 0,-42 C5,-30 15,-26 13,-12 C12,-5 6,0 0,0z" fill="#ffd54f"/>
-      </g>
+      ${FLAME}
     </g>
   </g>
   <g class="clk" data-entity="${esc(E.boiler_temp || '')}">
@@ -505,16 +480,7 @@ class HeizungsanlageCard extends HTMLElement {
 
   <!-- ================= Wasserhahn ================= -->
   <g transform="translate(344,145)">
-    <rect x="926" y="342" width="34" height="92" rx="8" fill="#b0bec5" stroke="#78909c" stroke-width="2"/>
-    <rect x="926" y="342" width="34" height="92" rx="8" fill="#eceff1" opacity=".55"/>
-    <path d="M926,350 H958 Q984,350 984,376 V384" fill="none" stroke="#90a4ae" stroke-width="16" stroke-linecap="round"/>
-    <path d="M926,350 H958 Q984,350 984,376 V384" fill="none" stroke="#eceff1" stroke-width="8" stroke-linecap="round"/>
-    <rect x="926" y="326" width="34" height="14" rx="5" fill="#607d8b"/>
-    <g class="drops" id="drops">
-      <circle class="drop" cx="984" cy="398" r="5" fill="#4fc3f7"/>
-      <circle class="drop" cx="984" cy="398" r="5" fill="#4fc3f7"/>
-      <circle class="drop" cx="984" cy="398" r="5" fill="#4fc3f7"/>
-    </g>
+    ${TAP}
   </g>
 
   <!-- ================= Wasserzähler & Enthärtung ================= -->
@@ -552,12 +518,6 @@ class HeizungsanlageCard extends HTMLElement {
     const cfg = this._config;
     const open = this._open || null;
 
-    const line = (id, d, col) =>
-      `<g class="line" id="ln-${id}"><path class="pipe" d="${d}" stroke="${C[col]}" marker-end="url(#ar-${col})"/><path class="flow" d="${d}"/></g>`;
-    const img = (key, x, y, w) => {
-      const o = IMG[key];
-      return `<image href="${o.d}" x="${x}" y="${y}" width="${w}" height="${((w * o.h) / o.w).toFixed(1)}" preserveAspectRatio="none"/>`;
-    };
     const imgH = (key, w) => (w * IMG[key].h) / IMG[key].w;
     const pump = (id, x, y, s, ent) =>
       `<g class="pump clk" id="pm-${id}" transform="translate(${x},${y}) scale(${s})" data-entity="${esc(ent || '')}">${PUMP_INNER}</g>`;
@@ -567,14 +527,11 @@ class HeizungsanlageCard extends HTMLElement {
       const k = w / 141;
       const wx = x + 0.42 * w, wy = y + 0.47 * h, ww = 0.47 * w, wh = 0.30 * h;
       return `<g class="boiler clk" id="boiler" data-entity="${esc(E.burner_active || '')}">
-        ${img('boiler', x, y, w)}
+        ${imgTag('boiler', x, y, w)}
         <rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="${7 * k}" fill="#120604" stroke="#aab2bb" stroke-opacity=".35" stroke-width="1"/>
         <rect class="win-glow" x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="${7 * k}" fill="url(#gWinGlow)"/>
         <g transform="translate(${wx + ww / 2},${wy + wh * 0.93}) scale(${(0.96 * k).toFixed(3)})">
-          <g id="flame">
-            <path d="M0,0 C-26,-18 -24,-48 0,-76 C8,-54 30,-44 26,-20 C24,-6 12,0 0,0z" fill="#ff6d00"/>
-            <path d="M0,0 C-12,-10 -11,-26 0,-42 C5,-30 15,-26 13,-12 C12,-5 6,0 0,0z" fill="#ffd54f"/>
-          </g>
+          ${FLAME}
         </g></g>`;
     };
 
@@ -583,7 +540,7 @@ class HeizungsanlageCard extends HTMLElement {
       const X = (f) => x + f * w, Y = (f) => y + f * h;
       const ix = X(0.31), iw = 0.38 * w, iy = Y(0.205), ih = 0.62 * h;
       return `<g class="clk" data-entity="${esc(E.tank_temp || '')}">
-        ${img('tank', x, y, w)}
+        ${imgTag('tank', x, y, w)}
         <rect x="${X(0.27)}" y="${Y(0.19)}" width="${0.46 * w}" height="${0.65 * h}" rx="${w * 0.09}" fill="#0d1117" stroke="#aab2bb" stroke-opacity=".3" stroke-width="1"/>
         <clipPath id="tclip"><rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="${w * 0.06}"/></clipPath>
         <g clip-path="url(#tclip)">
@@ -595,17 +552,7 @@ class HeizungsanlageCard extends HTMLElement {
 
     const tap = (ex, ey, s) => {
       const tx = ex - 920 * s, ty = ey - 355 * s;
-      return `<g transform="translate(${tx},${ty}) scale(${s})">
-        <rect x="926" y="342" width="34" height="92" rx="8" fill="#b0bec5" stroke="#78909c" stroke-width="2"/>
-        <rect x="926" y="342" width="34" height="92" rx="8" fill="#eceff1" opacity=".55"/>
-        <path d="M926,350 H958 Q984,350 984,376 V384" fill="none" stroke="#90a4ae" stroke-width="16" stroke-linecap="round"/>
-        <path d="M926,350 H958 Q984,350 984,376 V384" fill="none" stroke="#eceff1" stroke-width="8" stroke-linecap="round"/>
-        <rect x="926" y="326" width="34" height="14" rx="5" fill="#607d8b"/>
-        <g class="drops" id="drops">
-          <circle class="drop" cx="984" cy="398" r="5" fill="#4fc3f7"/>
-          <circle class="drop" cx="984" cy="398" r="5" fill="#4fc3f7"/>
-          <circle class="drop" cx="984" cy="398" r="5" fill="#4fc3f7"/>
-        </g></g>`;
+      return `<g transform="translate(${tx},${ty}) scale(${s})">${TAP}</g>`;
     };
 
     // Einheitliche Werte-Boxen im Schema: gleiche Höhe und Schriftgrößen (Beschriftung 13, Wert 20)
@@ -627,15 +574,15 @@ class HeizungsanlageCard extends HTMLElement {
     s += `<g class="clk" data-entity="${esc(E.supply_temp || '')}">${radiator(440, 36, 140)}</g>`;
     s += pump('heat', 257, 64, 0.6, E.heating_pump) + pump('chg', 257, 245, 0.6, E.charge_pump) + pump('circ', 488, 245, 0.6, E.dhw_circ_pump);
     s += boiler(46, 171.5, 100) + tank(339, 170.3, 92) + tap(540, 245, 0.85);
-    s += `<g class="clk" data-topic="gas">${img('gas', 18, 484, 80)}
+    s += `<g class="clk" data-topic="gas">${imgTag('gas', 18, 484, 80)}
 </g>`;
     // Enthärtung: Unterkante (y = 574) und Mitte (x = 422) bleiben, Höhe 90
     const sh = 90;
     const sw = +((sh * IMG.soft.w) / IMG.soft.h).toFixed(1);
     const sx = 422 - sw / 2;
     const sy = 574 - sh;
-    s += `<g class="clk" data-topic="softener">${img('soft', sx.toFixed(2), sy.toFixed(2), sw)}</g>`;
-    s += `<g class="clk" data-topic="water">${img('wm', 496, 501, 96)}</g>`;
+    s += `<g class="clk" data-topic="softener">${imgTag('soft', sx.toFixed(2), sy.toFixed(2), sw)}</g>`;
+    s += `<g class="clk" data-topic="water">${imgTag('wm', 496, 501, 96)}</g>`;
     s += valChip(455, 142, 110, 'Vorlauf', 'v-supply', E.supply_temp);
     s += valChip(118, 384, 110, 'Kessel', 'v-boiler', E.boiler_temp, '#e53935');
     s += valChip(266, 384, 110, 'Speicher', 'v-tank', E.tank_temp);
@@ -674,7 +621,7 @@ class HeizungsanlageCard extends HTMLElement {
     const infoTile = (y, h, title, rows, key, iw, align = '') => {
       // Zählerbild begrenzen (max. 40 hoch) und die Datenzeilen darunter mit Abstand beginnen lassen
       const w2 = Math.min(iw, (40 * IMG[key].w) / IMG[key].h);
-      let t = tile(10, y, 580, h) + `<text class="h" x="24" y="${y + 30}">${title}</text>` + img(key, 590 - w2 - 14, y + 6, w2);
+      let t = tile(10, y, 580, h) + `<text class="h" x="24" y="${y + 30}">${title}</text>` + imgTag(key, 590 - w2 - 14, y + 6, w2);
       rows.forEach((r, i) => {
         const yy = y + 84 + i * 30;
         t += `<g class="clk" data-entity="${esc(r[3] || '')}"><text class="s" x="24" y="${yy}">${r[0]}</text>${r[4] ? `<text class="v" id="${r[1]}" x="576" y="${yy}" text-anchor="end">–</text>` : numUnit(r[1], 'it-' + title, 576, yy, '', align)}</g>`;
@@ -713,15 +660,7 @@ class HeizungsanlageCard extends HTMLElement {
       panel = infoTile(py, 160, 'Enthärtungsanlage', [['Regeneration', 'v-soft-regen', 0, E.softener_regeneration, true], ['Salz %', 'v-soft-salt', 0, E.softener_salt], ['Noch ca.', 'v-soft-left', 0, E.softener_remaining]], 'soft', 30, 'right');
     } else if (open === 'settings') {
       ph = 206;
-      const set = [
-        ['Komforttemperatur', 'v-set-comfort', E.comfort_temp],
-        ['Normaltemperatur', 'v-set-normal', E.normal_temp],
-        ['Reduzierte Temperatur', 'v-set-reduced', E.reduced_temp],
-        ['Warmwasser Soll', 'v-set-target', E.tank_target],
-        ['Verschiebung Heizkurve', 'v-set-shift', E.curve_shift],
-        ['Steigung Heizkurve', 'v-set-slope', E.curve_slope],
-      ];
-      panel = tile(10, py, 580, 206) + set.map((c, i) => cell(18 + (i % 2) * 286, py + 10 + Math.floor(i / 2) * 62, 278, c[0], c[1], c[2])).join('');
+      panel = tile(10, py, 580, 206) + SETTINGS.map(([l, id, key], i) => cell(18 + (i % 2) * 286, py + 10 + Math.floor(i / 2) * 62, 278, l, id, E[key])).join('');
     } else if (open === 'status') {
       ph = 82;
       panel = tile(10, py, 580, 82) + cell(18, py + 14, 278, 'Außentemperatur', 'v-outside', E.outside_temp) + cell(304, py + 14, 278, 'Frostschutz', 'v-frost', E.frost_protection);
@@ -740,8 +679,7 @@ class HeizungsanlageCard extends HTMLElement {
 <svg class="narrow" viewBox="0 0 600 ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Heizungsanlage">
   ${this._defs()}
   <g transform="translate(14,6) scale(.8)">
-    <path d="M30,0 C34,18 54,26 54,50 C54,66 44,78 30,78 C16,78 6,66 6,52 C6,40 14,34 18,24 C20,32 24,34 26,36 C28,24 26,12 30,0z" fill="#ff7043"/>
-    <path d="M30,36 C33,46 42,50 42,60 C42,69 36,74 30,74 C24,74 18,69 18,61 C18,54 24,50 26,44 C28,48 29,48 30,36z" fill="#ffca28"/>
+    ${LOGO}
   </g>
   <text class="big" x="70" y="48" style="font-size:38px;letter-spacing:-.5px">${esc(cfg.title)}</text>
   <text class="s" x="72" y="76" style="font-size:16px">${esc(cfg.subtitle || '')}</text>
@@ -785,8 +723,12 @@ class HeizungsanlageCard extends HTMLElement {
     return !!s && s.state === 'on';
   }
 
+  _lang() {
+    return (this._hass.locale && this._hass.locale.language) || this._hass.language || 'de';
+  }
+
   _dateOnly(d) {
-    const lang = (this._hass.locale && this._hass.locale.language) || this._hass.language || 'de';
+    const lang = this._lang();
     const opts = { day: '2-digit', month: '2-digit', year: 'numeric' };
     const tz = this._hass.config && this._hass.config.time_zone;
     try {
@@ -826,19 +768,15 @@ class HeizungsanlageCard extends HTMLElement {
         /* Fallback unten */
       }
     }
-    const lang = (this._hass.locale && this._hass.locale.language) || this._hass.language || 'de';
-    const txt = n.toLocaleString(lang, { minimumFractionDigits: min, maximumFractionDigits: max });
-    const unit = s.attributes && s.attributes.unit_of_measurement;
-    return unit ? `${txt} ${unit}` : txt;
+    return this._fmtVal0(n, s.attributes && s.attributes.unit_of_measurement, max, min);
   }
 
   // Wert einer Entität aus ihrer Einheit in die Anzeige-Einheit umrechnen (z. B. L → m³, m³/h → l/h).
   // Gibt null zurück, wenn die Entität fehlt/nicht verfügbar ist oder die Einheit unbekannt ist.
   _convertTo(id, target) {
+    const n = this._num(id);
+    if (n == null) return null;
     const st = this._st(id);
-    if (!st || st.state === 'unavailable' || st.state === 'unknown') return null;
-    const n = parseFloat(st.state);
-    if (!Number.isFinite(n)) return null;
     const unit = ((st.attributes && st.attributes.unit_of_measurement) || '').trim().toLowerCase();
     const f = (UNIT_FACTORS[target] || {})[unit];
     const value = f == null ? null : n * f;
@@ -858,8 +796,7 @@ class HeizungsanlageCard extends HTMLElement {
 
   _fmtVal0(n, unit, max = 1, min = 0) {
     if (!Number.isFinite(n)) return '–';
-    const lang = (this._hass.locale && this._hass.locale.language) || this._hass.language || 'de';
-    const txt = n.toLocaleString(lang, { minimumFractionDigits: min, maximumFractionDigits: max });
+    const txt = n.toLocaleString(this._lang(), { minimumFractionDigits: min, maximumFractionDigits: max });
     return unit ? `${txt} ${unit}` : txt;
   }
 
@@ -944,10 +881,6 @@ class HeizungsanlageCard extends HTMLElement {
     const tog = (id, v) => {
       const el = $(id);
       if (el) el.classList.toggle('on', !!v);
-    };
-    const pillSet = (id, v) => {
-      tog('st-' + id, v);
-      setT('stt-' + id, v ? 'An' : 'Aus');
     };
 
     // Texte
@@ -1417,6 +1350,9 @@ const EDITOR_I18N = {
   },
 };
 
+// Einfache Optionen, die im Editor 1:1 übernommen werden (fehlend = Standardwert)
+const EDITOR_OPTIONS = ['fit_screen', 'screen_offset', 'title', 'subtitle', 'limit_offset'];
+
 class HeizungsanlageCardEditor extends HTMLElement {
   setConfig(config) {
     this._config = config || {};
@@ -1551,16 +1487,10 @@ class HeizungsanlageCardEditor extends HTMLElement {
   _toData(cfg) {
     const ents = { ...DEFAULTS.entities, ...(cfg.entities || {}) };
     const range = Array.isArray(cfg.tank_range) ? cfg.tank_range : DEFAULTS.tank_range;
-    const data = {
-      layout: cfg.layout || DEFAULTS.layout,
-      fit_screen: cfg.fit_screen !== undefined ? cfg.fit_screen : DEFAULTS.fit_screen,
-      screen_offset: cfg.screen_offset !== undefined ? cfg.screen_offset : DEFAULTS.screen_offset,
-      title: cfg.title !== undefined ? cfg.title : DEFAULTS.title,
-      subtitle: cfg.subtitle !== undefined ? cfg.subtitle : DEFAULTS.subtitle,
-      tank_range_min: range[0],
-      tank_range_max: range[1],
-      limit_offset: cfg.limit_offset !== undefined ? cfg.limit_offset : DEFAULTS.limit_offset,
-    };
+    const data = { layout: cfg.layout || DEFAULTS.layout, tank_range_min: range[0], tank_range_max: range[1] };
+    EDITOR_OPTIONS.forEach((k) => {
+      data[k] = cfg[k] !== undefined ? cfg[k] : DEFAULTS[k];
+    });
     Object.keys(DEFAULTS.entities).forEach((k) => {
       data['e_' + k] = ents[k] || '';
     });
@@ -1574,12 +1504,7 @@ class HeizungsanlageCardEditor extends HTMLElement {
       if (val === undefined || (typeof val === 'number' && isNaN(val)) || val === def) delete cfg[key];
       else cfg[key] = val;
     };
-    setOrDrop('layout', d.layout, DEFAULTS.layout);
-    setOrDrop('fit_screen', d.fit_screen, DEFAULTS.fit_screen);
-    setOrDrop('screen_offset', d.screen_offset, DEFAULTS.screen_offset);
-    setOrDrop('title', d.title, DEFAULTS.title);
-    setOrDrop('subtitle', d.subtitle, DEFAULTS.subtitle);
-    setOrDrop('limit_offset', d.limit_offset, DEFAULTS.limit_offset);
+    ['layout', ...EDITOR_OPTIONS].forEach((k) => setOrDrop(k, d[k], DEFAULTS[k]));
     const lo = Number(d.tank_range_min);
     const hi = Number(d.tank_range_max);
     if (isNaN(lo) || isNaN(hi) || (lo === DEFAULTS.tank_range[0] && hi === DEFAULTS.tank_range[1])) delete cfg.tank_range;

@@ -1,6 +1,6 @@
 {
   "name": "heizungskeller-schema",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Boiler Room Scheme Card: animiertes Anlagenschema einer Gas-Heizung",
   "private": true,
   "scripts": {
