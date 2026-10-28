@@ -15,8 +15,8 @@ keine externen Requests). HACS lädt genau diese Datei.
    bearbeiten oder umformatieren**; Bilder werden mit `tools/images.py` getauscht.
 2. Nach jeder Änderung: `npm run check` (Syntax) und `npm test` (Editor + beide Layouts), danach die Vorschau in
    **beiden Layouts** ansehen (`npm run preview`, siehe unten) und das Ergebnis prüfen, bevor committet wird.
-3. `CARD_VERSION` (Zeile 11) und `package.json` hochzählen: Patch für Layout/Texte, Minor für neue Funktionen. Der Nutzer hat
-   die Version auf **1.0.1** festgelegt, die Zählung läuft ab dort weiter.
+3. `CARD_VERSION` (Zeile 11) und `package.json` hochzählen: Patch für Layout/Texte, Minor für neue Funktionen. Die
+   aktuelle Version steht in `package.json`; der Release-Workflow prüft, dass beide Angaben übereinstimmen.
 4. Ändern sich Verhalten, Optionen oder Design-Entscheidungen, `README.md` und `CONTEXT.md` mitpflegen.
 5. Texte in der Karte sind **deutsch**; der Editor ist deutsch **und** englisch (`EDITOR_I18N`).
 6. Native Home-Assistant-Mittel verwenden: `ha-form`-Editor, `hass-more-info` bei Klick auf Werte,
@@ -34,16 +34,18 @@ keine externen Requests). HACS lädt genau diese Datei.
 |---|---|
 | `CARD_VERSION`, `IMG` | Version; eingebettete Gerätebilder (WebP als Data-URI: boiler, tank, gas, wm, soft) |
 | `C`, `PUMP_INNER`, `DEFAULTS` | Leitungsfarben; gezeichnete Pumpe; Standard-Konfiguration inkl. aller Entitäten |
+| `line`, `imgTag`, `LOGO`, `FLAME`, `TAP`, `SETTINGS` | gemeinsame Bausteine beider Layouts: Leitung, Gerätebild, Logo, Flamme, Wasserhahn, Liste der Einstellungen |
 | `class HeizungsanlageCard` | die Karte |
 | `connectedCallback` / `_useNarrow` | `ResizeObserver`: unter 700 px → kompaktes Layout (`layout: auto`) |
 | `_build`, `_css` | Shadow-DOM aufbauen, Klick-Handler (`data-entity` → more-info, `data-topic` → Akkordeon) |
 | `_svgWide()` | breites Layout, `viewBox 0 0 1400 1150` |
-| `_svgNarrow()` / `_defs()` | kompaktes Layout (Handy), `viewBox 0 0 600 H`, Details hinter Schaltflächen |
-| `_st`, `_num`, `_on`, `_fmt`, `_fmtVal`, `_unitOf` | Zugriff auf States und Formatierung |
+| `_svgNarrow()` | kompaktes Layout (Handy), `viewBox 0 0 600 H`, Details hinter Schaltflächen |
+| `_defs()` | gemeinsame Farb- und Pfeil-Definitionen beider Layouts |
+| `_st`, `_num`, `_on`, `_fmt`, `_fmtVal`, `_unitOf`, `_lang` | Zugriff auf States, Formatierung und Spracherkennung |
 | `_loadEnergy` | Gas/Wasser aus dem Energie-Dashboard (`energy/get_prefs`, Statistiken) |
 | `_update()` | schaltet Animationen (Klasse `on`), setzt Texte, Speicherfüllung, zeichnet Diagramme |
 | `_loadHistory`, `_series`, `_drawBurnerChart`, `_drawChart` | 24-h-Verläufe (alle 5 min neu geladen) |
-| `EDITOR_I18N`, `class HeizungsanlageCardEditor` | visueller Editor mit `ha-form` (`_schema`, `_toData`, `_fromData`) |
+| `EDITOR_I18N`, `EDITOR_OPTIONS`, `class HeizungsanlageCardEditor` | visueller Editor mit `ha-form` (`_schema`, `_toData`, `_fromData`); `EDITOR_OPTIONS` listet die einfachen Textoptionen |
 | Registrierung am Ende | `customElements.define`, `window.customCards` |
 
 ## Koordinatensysteme
@@ -92,16 +94,15 @@ sagen, dass keine Vorschau erzeugt werden konnte.
 
 ```bash
 npm run check                                   # node --check
-npm test                                        # tools/test_editor.py: Editor + beide Layouts
+npm test                                        # Zahlen-Sicherheit, Editor + beide Layouts, HTML-Injection
 npm run preview                                 # tools/out/breit.png und tools/out/kompakt*.png
 python tools/harness.py --width 390 --topic diagrams --out tools/out/x.png   # einzelnes Bild
 python tools/images.py extract                  # Gerätebilder nach assets/devices/*.webp
 python tools/images.py embed                    # Bilder aus assets/devices/ wieder einbetten
 ```
 
-Die Vorschau nutzt Testdaten (siehe `tools/harness.py`) – kein echtes Home Assistant. Die Bilder
-`docs/vorschau.png` und `docs/vorschau-kompakt.png` im README werden bei größeren Design-Änderungen mit
-`python tools/harness.py` neu erzeugt.
+Die Vorschau nutzt Testdaten (siehe `tools/harness.py`) – kein echtes Home Assistant. Die Bilder im README liegen in
+`screenshots/`; bei größeren Design-Änderungen werden sie neu erzeugt und ersetzt.
 
 ## Typische Aufgaben
 

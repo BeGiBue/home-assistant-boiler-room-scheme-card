@@ -66,7 +66,6 @@ Eine bereits vorhandene Ressource nicht doppelt eintragen.
 
 Die Aufnahme in den offiziellen HACS-Katalog erfordert kein erneutes Anlegen der Karten.
 `type: custom:heizungsanlage-card`, Entitätszuordnungen und vorhandene Konfigurationsschlüssel bleiben erhalten.
-Die Major-Version 2.0.0 markiert diesen Meilenstein und bedeutet **nicht automatisch Breaking Changes**.
 
 ### Manuell
 
