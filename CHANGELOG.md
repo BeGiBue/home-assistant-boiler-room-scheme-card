@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0
+
+- The card now appears in English by default and in German when Home Assistant is set to German; the editor already supported both. / Die Karte erscheint jetzt standardmäßig auf Englisch und auf Deutsch, wenn Home Assistant auf Deutsch eingestellt ist; der Editor war bereits zweisprachig.
+- The default title follows the Home Assistant language. / Der Standardtitel folgt der Sprache von Home Assistant.
+- README shortened and available in English and German. / README gekürzt und auf Englisch und Deutsch verfügbar.
+
 ## 2.0.1
 
 - Aufräumarbeiten ohne Funktionsänderung: ungenutzten Code (alte Status-Pillen, nicht mehr verwendete Gestaltungsregeln und ein ungenutzter Farbverlauf) entfernt, doppelt vorhandene Bausteine von breitem und kompaktem Layout (Pumpe, Leitungen, Bilder, Logo, Farben und Pfeile) sowie Spracherkennung, Zahlenformatierung und Editor-Optionen zusammengeführt. Darstellung, Konfiguration und Verhalten bleiben unverändert (42 Ansichten pixelgleich geprüft).

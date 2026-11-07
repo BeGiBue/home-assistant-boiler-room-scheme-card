@@ -8,7 +8,7 @@
  *   card:      type: custom:heizungsanlage-card   (Einstellungen über den visuellen Editor)
  */
 
-const CARD_VERSION = '2.0.1';
+const CARD_VERSION = '2.1.0';
 
 // Maskiert dynamische Texte und Werte in doppelt zitierten HTML-/SVG-Attributen.
 const esc = (value) => String(value)
@@ -72,14 +72,113 @@ const TAP = `<rect x="926" y="342" width="34" height="92" rx="8" fill="#b0bec5" 
       <circle class="drop" cx="984" cy="398" r="5" fill="#4fc3f7"/>
     </g>`;
 
+// Language of the card: German when Home Assistant uses German, otherwise English.
+const CARD_I18N = {
+  "en": {
+    "title": "Heating system",
+    "comfort": "Comfort temperature",
+    "normal": "Normal temperature",
+    "reduced": "Reduced temperature",
+    "dhw_target": "Hot water setpoint",
+    "curve_shift": "Heating curve shift",
+    "curve_slope": "Heating curve slope",
+    "gas_meter": "Gas meter",
+    "today": "Today",
+    "reading": "Total",
+    "flow": "Flow",
+    "water_meter": "Water meter",
+    "softener": "Water softener",
+    "regeneration": "Regeneration",
+    "regenerations": "Regenerations",
+    "salt": "Salt %",
+    "remaining": "Approx. left",
+    "outside": "Outside temperature",
+    "frost": "Frost protection",
+    "burner_hours": "Burner hours",
+    "burner_starts": "Burner starts",
+    "status": "Status",
+    "settings": "Settings",
+    "supply": "Supply",
+    "boiler": "Boiler",
+    "tank": "Tank",
+    "cold": "Cold water",
+    "diagrams": "Charts",
+    "burner": "Burner",
+    "gas": "Gas",
+    "water": "Water",
+    "softener_short": "Softener",
+    "details": "Details",
+    "modulation": "Modulation",
+    "boiler_temp": "Boiler temperature",
+    "dhw_tank": "Hot water tank",
+    "setpoint": "Setpoint",
+    "limits": "Limits",
+    "on": "On",
+    "off": "Off",
+    "now": "now",
+    "description": "System diagram for a gas or oil heating system with hot water tank, pumps and water meter"
+  },
+  "de": {
+    "title": "Heizungsanlage",
+    "comfort": "Komforttemperatur",
+    "normal": "Normaltemperatur",
+    "reduced": "Reduzierte Temperatur",
+    "dhw_target": "Warmwasser Soll",
+    "curve_shift": "Verschiebung Heizkurve",
+    "curve_slope": "Steigung Heizkurve",
+    "gas_meter": "Gaszähler",
+    "today": "Heute",
+    "reading": "Stand",
+    "flow": "Durchfluss",
+    "water_meter": "Wasserzähler",
+    "softener": "Enthärtungsanlage",
+    "regeneration": "Regeneration",
+    "regenerations": "Regenerationen",
+    "salt": "Salz %",
+    "remaining": "Noch ca.",
+    "outside": "Außentemperatur",
+    "frost": "Frostschutz",
+    "burner_hours": "Brennerstunden",
+    "burner_starts": "Brennerstarts",
+    "status": "Status",
+    "settings": "Einstellungen",
+    "supply": "Vorlauf",
+    "boiler": "Kessel",
+    "tank": "Speicher",
+    "cold": "Kaltwasser",
+    "diagrams": "Diagramme",
+    "burner": "Brenner",
+    "gas": "Gas",
+    "water": "Wasser",
+    "softener_short": "Enthärtung",
+    "details": "Details",
+    "modulation": "Modulation",
+    "boiler_temp": "Kesseltemperatur",
+    "dhw_tank": "Warmwasserspeicher",
+    "setpoint": "Soll",
+    "limits": "Grenzwerte",
+    "on": "An",
+    "off": "Aus",
+    "now": "jetzt",
+    "description": "Anlagenschema für Gas-/Ölheizung mit Warmwasserspeicher, Pumpen und Wasserzähler"
+  }
+};
+const cardLang = (hass) =>
+  String((hass && ((hass.locale && hass.locale.language) || hass.language)) || (globalThis.document && document.documentElement && document.documentElement.lang) || (globalThis.navigator && navigator.language) || 'en')
+    .toLowerCase()
+    .startsWith('de')
+    ? 'de'
+    : 'en';
+const cardText = (hass) => CARD_I18N[cardLang(hass)];
+
 // Einstellungen (untere Leiste bzw. Bereich „Einstellungen“): Beschriftung, Element-ID, Schlüssel in entities
 const SETTINGS = [
-  ['Komforttemperatur', 'v-set-comfort', 'comfort_temp'],
-  ['Normaltemperatur', 'v-set-normal', 'normal_temp'],
-  ['Reduzierte Temperatur', 'v-set-reduced', 'reduced_temp'],
-  ['Warmwasser Soll', 'v-set-target', 'tank_target'],
-  ['Verschiebung Heizkurve', 'v-set-shift', 'curve_shift'],
-  ['Steigung Heizkurve', 'v-set-slope', 'curve_slope'],
+  ['comfort', 'v-set-comfort', 'comfort_temp'],
+  ['normal', 'v-set-normal', 'normal_temp'],
+  ['reduced', 'v-set-reduced', 'reduced_temp'],
+  ['dhw_target', 'v-set-target', 'tank_target'],
+  ['curve_shift', 'v-set-shift', 'curve_shift'],
+  ['curve_slope', 'v-set-slope', 'curve_slope'],
 ];
 
 // Umrechnungsfaktoren in die Anzeige-Einheit (Schlüssel: Einheit der Entität, kleingeschrieben)
@@ -215,7 +314,12 @@ class HeizungsanlageCard extends HTMLElement {
   set hass(hass) {
     this._hass = hass;
     if (!this._config) return;
-    if (!this._built) this._build();
+    const lang = cardLang(hass);
+    if (lang !== this._builtLang) this._built = false;
+    if (!this._built) {
+      this._builtLang = lang;
+      this._build();
+    }
     this._update();
     if (Date.now() - this._histAt > 5 * 60 * 1000) this._loadHistory();
     if (!this._energyLoading && Date.now() - this._energyAt > 5 * 60 * 1000) this._loadEnergy();
@@ -332,6 +436,7 @@ class HeizungsanlageCard extends HTMLElement {
   }
 
   _svgWide() {
+    const T = cardText(this._hass);
     const E = this._config.entities;
     const cfg = this._config;
 
@@ -353,31 +458,31 @@ class HeizungsanlageCard extends HTMLElement {
     };
 
     // ---- Datenboxen (jeweils unter ihrem Gerät) ----
-    const gasBox = infoBox(20, 572, 210, 'Gaszähler', [
-      { label: 'Heute', id: 'v-gas-today', ent: E.gas_today || '' },
-      { label: 'Stand', id: 'v-gas-total', ent: E.gas_total || '' },
+    const gasBox = infoBox(20, 572, 210, T.gas_meter, [
+      { label: T.today, id: 'v-gas-today', ent: E.gas_today || '' },
+      { label: T.reading, id: 'v-gas-total', ent: E.gas_total || '' },
     ]);
 
     const waterRows = [
-      { label: 'Heute', id: 'v-water-today', ent: E.water_today || '' },
-      { label: 'Stand', id: 'v-water-total', ent: E.water_total || '' },
+      { label: T.today, id: 'v-water-today', ent: E.water_today || '' },
+      { label: T.reading, id: 'v-water-total', ent: E.water_total || '' },
     ];
-    if (E.water_flow) waterRows.push({ label: 'Durchfluss', id: 'v-water-flow', ent: E.water_flow });
-    const waterBox = infoBox(20, 912, 205, 'Wasserzähler', waterRows, '', 'right'); // Messwerte rechtsbündig
+    if (E.water_flow) waterRows.push({ label: T.flow, id: 'v-water-flow', ent: E.water_flow });
+    const waterBox = infoBox(20, 912, 205, T.water_meter, waterRows, '', 'right'); // Messwerte rechtsbündig
 
     // Tafel der Enthärtungsanlage (immer sichtbar, Werte nur wenn Entitäten eingetragen sind)
-    const softBox = infoBox(360, 912, 290, 'Enthärtungsanlage', [
-      { label: 'Regeneration', id: 'v-soft-regen', ent: E.softener_regeneration || '', plain: true }, // Datum, keine Einheit
-      { label: 'Salz %', id: 'v-soft-salt', ent: E.softener_salt || '' },
-      { label: 'Noch ca.', id: 'v-soft-left', ent: E.softener_remaining || '' },
+    const softBox = infoBox(360, 912, 290, T.softener, [
+      { label: T.regeneration, id: 'v-soft-regen', ent: E.softener_regeneration || '', plain: true }, // Datum, keine Einheit
+      { label: T.salt, id: 'v-soft-salt', ent: E.softener_salt || '' },
+      { label: T.remaining, id: 'v-soft-left', ent: E.softener_remaining || '' },
     ], '', 'right'); // Messwerte rechtsbündig
 
     // ---- Untere Leiste: Status (Kennzahlen) und Einstellungen ----
     const chips = [
-      { l: 'Außentemperatur', id: 'v-outside', ent: E.outside_temp },
-      { l: 'Frostschutz', id: 'v-frost', ent: E.frost_protection },
-      { l: 'Brennerstunden', id: 'v-hours', ent: E.burner_hours },
-      { l: 'Brennerstarts', id: 'v-starts', ent: E.burner_starts },
+      { l: T.outside, id: 'v-outside', ent: E.outside_temp },
+      { l: T.frost, id: 'v-frost', ent: E.frost_protection },
+      { l: T.burner_hours, id: 'v-hours', ent: E.burner_hours },
+      { l: T.burner_starts, id: 'v-starts', ent: E.burner_starts },
     ]
       .map(
         (c, i) => `<g class="clk" data-entity="${esc(c.ent || '')}" transform="translate(${210 + i * 292},1092)">
@@ -390,14 +495,14 @@ class HeizungsanlageCard extends HTMLElement {
     const cw = 186;
     const sets =
       `<rect class="box" x="20" y="1080" width="1360" height="152" rx="16"/>
-       <text class="h" x="42" y="1129" style="font-size:22px">Status</text>
-       <text class="h" x="42" y="1197" style="font-size:22px">Einstellungen</text>` +
+       <text class="h" x="42" y="1129" style="font-size:22px">${T.status}</text>
+       <text class="h" x="42" y="1197" style="font-size:22px">${T.settings}</text>` +
       SETTINGS
         .map(([l, id, key], i) => {
           const x = 210 + i * (cw + 8);
           return `<g class="clk" data-entity="${esc(E[key] || '')}">
             <rect class="cell" x="${x}" y="1160" width="${cw}" height="60" rx="10"/>
-            <text class="s" x="${x + 12}" y="1182" style="font-size:14px">${l}</text>
+            <text class="s" x="${x + 12}" y="1182" style="font-size:14px">${T[l]}</text>
             <text class="v" id="${id}" x="${x + 12}" y="1209" style="font-size:20px">–</text></g>`;
         })
         .join('');
@@ -410,7 +515,7 @@ class HeizungsanlageCard extends HTMLElement {
   <g transform="translate(26,6) scale(1.25)">
     ${LOGO}
   </g>
-  <text class="big" x="118" y="66">${esc(cfg.title)}</text>
+  <text class="big" x="118" y="66">${esc(cfg.title === DEFAULTS.title ? T.title : cfg.title)}</text>
   <text class="s" x="120" y="100" style="font-size:23px">${esc(cfg.subtitle || '')}</text>
 
   <g transform="translate(0,-104)">
@@ -432,7 +537,7 @@ class HeizungsanlageCard extends HTMLElement {
   <g class="clk" data-entity="${esc(E.supply_temp || '')}">
     ${radiator(1180, 262, 170)}
     <rect class="box" x="1190" y="392" width="180" height="44" rx="12"/>
-    <text class="s" x="1204" y="420">Vorlauf</text>
+    <text class="s" x="1204" y="420">${T.supply}</text>
     <text class="v" id="v-supply" x="1356" y="420" text-anchor="end">–</text>
   </g>
 
@@ -492,7 +597,7 @@ class HeizungsanlageCard extends HTMLElement {
   <!-- ================= Kaltwasser-Temperatur ================= -->
   ${E.water_temp ? `<g class="clk" data-entity="${esc(E.water_temp)}">
     <rect class="box" x="20" y="768" width="205" height="38" rx="12"/>
-    <text class="s" x="32" y="793">Kaltwasser</text>
+    <text class="s" x="32" y="793">${T.cold}</text>
     <text class="v" id="v-cold" x="213" y="793" text-anchor="end">–</text></g>` : ''}
 
   <!-- ================= Verlauf Speichertemperatur ================= -->
@@ -514,6 +619,7 @@ class HeizungsanlageCard extends HTMLElement {
    * Kerngeräte mit großen Zahlen, Details hinter Schaltflächen (Akkordeon).
    * ==================================================================== */
   _svgNarrow() {
+    const T = cardText(this._hass);
     const E = this._config.entities;
     const cfg = this._config;
     const open = this._open || null;
@@ -583,18 +689,18 @@ class HeizungsanlageCard extends HTMLElement {
     const sy = 574 - sh;
     s += `<g class="clk" data-topic="softener">${imgTag('soft', sx.toFixed(2), sy.toFixed(2), sw)}</g>`;
     s += `<g class="clk" data-topic="water">${imgTag('wm', 496, 501, 96)}</g>`;
-    s += valChip(455, 142, 110, 'Vorlauf', 'v-supply', E.supply_temp);
-    s += valChip(118, 384, 110, 'Kessel', 'v-boiler', E.boiler_temp, '#e53935');
-    s += valChip(266, 384, 110, 'Speicher', 'v-tank', E.tank_temp);
-    s += valChip(266, 466, 110, 'Kaltwasser', 'v-cold', E.water_temp);
+    s += valChip(455, 142, 110, T.supply, 'v-supply', E.supply_temp);
+    s += valChip(118, 384, 110, T.boiler, 'v-boiler', E.boiler_temp, '#e53935');
+    s += valChip(266, 384, 110, T.tank, 'v-tank', E.tank_temp);
+    s += valChip(266, 466, 110, T.cold, 'v-cold', E.water_temp);
     s += '</g>';
 
     // ---- Detail-Schaltflächen ----
     const by = 690; // Abstand Schema → Details (gleich groß wie Überschrift → Schema)
     // Zeile 1: Diagramme, Status, Einstellungen · Zeile 2: Brenner, Gas, Wasser, Enthärtung (je Zeile gleich breit)
     const topicRows = [
-      [['diagrams', 'Diagramme'], ['status', 'Status'], ['settings', 'Einstellungen']],
-      [['burner', 'Brenner'], ['gas', 'Gas'], ['water', 'Wasser'], ['softener', 'Enthärtung']],
+      [['diagrams', T.diagrams], ['status', T.status], ['settings', T.settings]],
+      [['burner', T.burner], ['gas', T.gas], ['water', T.water], ['softener', T.softener_short]],
     ];
     const topics = {};
     topicRows.forEach((row, r) => {
@@ -603,7 +709,7 @@ class HeizungsanlageCard extends HTMLElement {
         topics[key] = [label, +(10 + i * (w + 10)).toFixed(2), by + 4 + r * 56, +w.toFixed(2)];
       });
     });
-    s += `<text class="s" x="14" y="${by - 6}" style="font-size:15px">Details</text>`;
+    s += `<text class="s" x="14" y="${by - 6}" style="font-size:15px">${T.details}</text>`;
     Object.entries(topics).forEach(([key, [label, x, y, w]]) => {
       const on = open === key;
       s += `<g class="btn clk" data-topic="${key}">
@@ -638,40 +744,40 @@ class HeizungsanlageCard extends HTMLElement {
       const g2 = { x0: 52, x1: 465, y0: t2 + 48, y1: t2 + 138 };
       panel =
         tile(10, py, 580, th) +
-        `<text class="h" x="24" y="${py + 30}">Brenner</text>
-         <text class="s" x="574" y="${py + 30}" text-anchor="end" style="font-size:14px"><tspan style="fill:#e08a00">● Modulation</tspan><tspan dx="14" style="fill:#e53935">● Kesseltemperatur</tspan></text>
+        `<text class="h" x="24" y="${py + 30}">${T.burner}</text>
+         <text class="s" x="574" y="${py + 30}" text-anchor="end" style="font-size:14px"><tspan style="fill:#e08a00">● ${T.modulation}</tspan><tspan dx="14" style="fill:#e53935">● ${T.boiler_temp}</tspan></text>
          <g class="clk" data-entity="${esc(E.boiler_temp || '')}"><g id="chart-burner" data-x0="${g1.x0}" data-x1="${g1.x1}" data-y0="${g1.y0}" data-y1="${g1.y1}"></g></g>
          <g class="clk" data-entity="${esc(E.burner_modulation || '')}">${numUnit('v-mod', 'burner', 574, py + 90, 'font-size:24px;fill:#e08a00')}</g>
          <g class="clk" data-entity="${esc(E.boiler_temp || '')}">${numUnit('v-boiler-d', 'burner', 574, py + 128, 'font-size:24px;fill:#e53935')}</g>` +
         tile(10, t2, 580, th) +
-        `<text class="h" x="24" y="${t2 + 30}">Warmwasserspeicher</text>
-         <text class="s" x="574" y="${t2 + 30}" text-anchor="end" style="font-size:14px"><tspan style="fill:#fb8c00">··· Soll</tspan><tspan dx="14" style="fill:#8e8e93">– – Grenzwerte</tspan></text>
+        `<text class="h" x="24" y="${t2 + 30}">${T.dhw_tank}</text>
+         <text class="s" x="574" y="${t2 + 30}" text-anchor="end" style="font-size:14px"><tspan style="fill:#fb8c00">··· ${T.setpoint}</tspan><tspan dx="14" style="fill:#8e8e93">– – ${T.limits}</tspan></text>
          <g class="clk" data-entity="${esc(E.tank_temp || '')}"><g id="chart" data-x0="${g2.x0}" data-x1="${g2.x1}" data-y0="${g2.y0}" data-y1="${g2.y1}" data-xr="574"></g>
          ${numUnit('v-tank-d', 'tank', 574, t2 + 103, 'font-size:26px')}</g>`;
 
     } else if (open === 'gas') {
       ph = 130;
-      panel = infoTile(py, 130, 'Gaszähler', [['Heute', 'v-gas-today', 0, E.gas_today], ['Stand', 'v-gas-total', 0, E.gas_total]], 'gas', 54);
+      panel = infoTile(py, 130, T.gas_meter, [[T.today, 'v-gas-today', 0, E.gas_today], [T.reading, 'v-gas-total', 0, E.gas_total]], 'gas', 54);
     } else if (open === 'water') {
       ph = 160;
-      panel = infoTile(py, 160, 'Wasserzähler', [['Heute', 'v-water-today', 0, E.water_today], ['Stand', 'v-water-total', 0, E.water_total], ['Durchfluss', 'v-water-flow', 0, E.water_flow]], 'wm', 64, 'right');
+      panel = infoTile(py, 160, T.water_meter, [[T.today, 'v-water-today', 0, E.water_today], [T.reading, 'v-water-total', 0, E.water_total], [T.flow, 'v-water-flow', 0, E.water_flow]], 'wm', 64, 'right');
     } else if (open === 'softener') {
       ph = 160;
-      panel = infoTile(py, 160, 'Enthärtungsanlage', [['Regeneration', 'v-soft-regen', 0, E.softener_regeneration, true], ['Salz %', 'v-soft-salt', 0, E.softener_salt], ['Noch ca.', 'v-soft-left', 0, E.softener_remaining]], 'soft', 30, 'right');
+      panel = infoTile(py, 160, T.softener, [[T.regeneration, 'v-soft-regen', 0, E.softener_regeneration, true], [T.salt, 'v-soft-salt', 0, E.softener_salt], [T.remaining, 'v-soft-left', 0, E.softener_remaining]], 'soft', 30, 'right');
     } else if (open === 'settings') {
       ph = 206;
-      panel = tile(10, py, 580, 206) + SETTINGS.map(([l, id, key], i) => cell(18 + (i % 2) * 286, py + 10 + Math.floor(i / 2) * 62, 278, l, id, E[key])).join('');
+      panel = tile(10, py, 580, 206) + SETTINGS.map(([l, id, key], i) => cell(18 + (i % 2) * 286, py + 10 + Math.floor(i / 2) * 62, 278, T[l], id, E[key])).join('');
     } else if (open === 'status') {
       ph = 82;
-      panel = tile(10, py, 580, 82) + cell(18, py + 14, 278, 'Außentemperatur', 'v-outside', E.outside_temp) + cell(304, py + 14, 278, 'Frostschutz', 'v-frost', E.frost_protection);
+      panel = tile(10, py, 580, 82) + cell(18, py + 14, 278, T.outside, 'v-outside', E.outside_temp) + cell(304, py + 14, 278, T.frost, 'v-frost', E.frost_protection);
     } else if (open === 'burner') {
       ph = 144;
       panel =
         tile(10, py, 580, 144) +
-        cell(18, py + 10, 278, 'Modulation', 'v-mod', E.burner_modulation) +
-        cell(304, py + 10, 278, 'Kesseltemperatur', 'v-boiler-d', E.boiler_temp) +
-        cell(18, py + 72, 278, 'Brennerstunden', 'v-hours', E.burner_hours) +
-        cell(304, py + 72, 278, 'Brennerstarts', 'v-starts', E.burner_starts);
+        cell(18, py + 10, 278, T.modulation, 'v-mod', E.burner_modulation) +
+        cell(304, py + 10, 278, T.boiler_temp, 'v-boiler-d', E.boiler_temp) +
+        cell(18, py + 72, 278, T.burner_hours, 'v-hours', E.burner_hours) +
+        cell(304, py + 72, 278, T.burner_starts, 'v-starts', E.burner_starts);
     }
     const H = open ? py + ph + 20 : by + 126;
 
@@ -681,7 +787,7 @@ class HeizungsanlageCard extends HTMLElement {
   <g transform="translate(14,6) scale(.8)">
     ${LOGO}
   </g>
-  <text class="big" x="70" y="48" style="font-size:38px;letter-spacing:-.5px">${esc(cfg.title)}</text>
+  <text class="big" x="70" y="48" style="font-size:38px;letter-spacing:-.5px">${esc(cfg.title === DEFAULTS.title ? T.title : cfg.title)}</text>
   <text class="s" x="72" y="76" style="font-size:16px">${esc(cfg.subtitle || '')}</text>
   ${s}
   ${panel}
@@ -724,7 +830,7 @@ class HeizungsanlageCard extends HTMLElement {
   }
 
   _lang() {
-    return (this._hass.locale && this._hass.locale.language) || this._hass.language || 'de';
+    return (this._hass.locale && this._hass.locale.language) || this._hass.language || 'en';
   }
 
   _dateOnly(d) {
@@ -861,6 +967,7 @@ class HeizungsanlageCard extends HTMLElement {
   /* ---------- Live-Update ---------- */
 
   _update() {
+    const T = cardText(this._hass);
     if (!this._built || !this._hass) return;
     const E = this._config.entities;
     const $ = (id) => this.shadowRoot.getElementById(id);
@@ -886,7 +993,7 @@ class HeizungsanlageCard extends HTMLElement {
     // Texte
     setT('v-outside', this._fmt(E.outside_temp, 1, 1));
     const frost = this._st(E.frost_protection);
-    setT('v-frost', !frost || frost.state === 'unavailable' ? '–' : frost.state === 'on' ? 'An' : 'Aus');
+    setT('v-frost', !frost || frost.state === 'unavailable' ? '–' : frost.state === 'on' ? T.on : T.off);
     setT('v-hours', this._fmt(E.burner_hours, 0));
     setT('v-starts', this._fmt(E.burner_starts, 0));
     setT('v-supply', this._fmt(E.supply_temp, 1, 1));
@@ -909,7 +1016,7 @@ class HeizungsanlageCard extends HTMLElement {
     const softLeft = E.softener_remaining ? this._num(E.softener_remaining) : null;
     setT(
       'v-soft-left',
-      softLeft != null ? `${Math.round(softLeft)} ${Math.round(softLeft) === 1 ? 'Regeneration' : 'Regenerationen'}` : '–'
+      softLeft != null ? `${Math.round(softLeft)} ${Math.round(softLeft) === 1 ? T.regeneration : T.regenerations}` : '–'
     );
     setT('v-set-comfort', this._fmt(E.comfort_temp, 1));
     setT('v-set-normal', this._fmt(E.normal_temp, 1));
@@ -1123,7 +1230,7 @@ class HeizungsanlageCard extends HTMLElement {
       s += `<path d="${this._series(bt, sx, sya, X1)}" fill="none" stroke="#e53935" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
     }
     // Zeitfenster: immer die letzten 24 Stunden
-    s += `<text class="tick" x="${X0}" y="${Y1 + 20}">–24 h</text><text class="tick" x="${X1}" y="${Y1 + 20}" text-anchor="end">jetzt</text>`;
+    s += `<text class="tick" x="${X0}" y="${Y1 + 20}">–24 h</text><text class="tick" x="${X1}" y="${Y1 + 20}" text-anchor="end">${cardText(this._hass).now}</text>`;
     g.innerHTML = s;
   }
 
@@ -1199,7 +1306,7 @@ class HeizungsanlageCard extends HTMLElement {
     };
     s += pair('ch-max', Y0 + 14, '#e53935', pMax.v);
     s += pair('ch-min', Y1, '#1e88e5', pMin.v);
-    s += `<text class="tick" x="${X0}" y="${Y1 + 20}">–24 h</text><text class="tick" x="${X1}" y="${Y1 + 20}" text-anchor="end">jetzt</text>`;
+    s += `<text class="tick" x="${X0}" y="${Y1 + 20}">–24 h</text><text class="tick" x="${X1}" y="${Y1 + 20}" text-anchor="end">${cardText(this._hass).now}</text>`;
     g.innerHTML = s;
     this._alignUnits();
   }
@@ -1372,7 +1479,7 @@ class HeizungsanlageCardEditor extends HTMLElement {
   }
 
   _t() {
-    const lang = ((this._hass && (this._hass.locale?.language || this._hass.language)) || 'de').toLowerCase();
+    const lang = ((this._hass && (this._hass.locale?.language || this._hass.language)) || 'en').toLowerCase();
     return lang.startsWith('de') ? EDITOR_I18N.de : EDITOR_I18N.en;
   }
 
@@ -1558,8 +1665,8 @@ if (!customElements.get('heizungsanlage-card')) {
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: 'heizungsanlage-card',
-  name: 'Heizungsanlage',
-  description: 'Anlagenschema für Gas-/Ölheizung mit Warmwasserspeicher, Pumpen und Wasserzähler',
+  name: 'Boiler Room Scheme Card',
+  description: cardText().description,
   preview: true,
   documentationURL: 'https://github.com/BeGiBue/home-assistant-boiler-room-scheme-card',
 });
