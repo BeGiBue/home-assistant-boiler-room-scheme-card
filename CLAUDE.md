@@ -18,7 +18,7 @@ keine externen Requests). HACS lädt genau diese Datei.
 3. `CARD_VERSION` (Zeile 11) und `package.json` hochzählen: Patch für Layout/Texte, Minor für neue Funktionen. Die
    aktuelle Version steht in `package.json`; der Release-Workflow prüft, dass beide Angaben übereinstimmen.
 4. Ändern sich Verhalten, Optionen oder Design-Entscheidungen, `README.md` und `CONTEXT.md` mitpflegen.
-5. Texte in der Karte sind **deutsch**; der Editor ist deutsch **und** englisch (`EDITOR_I18N`).
+5. Texte in Karte und Editor sind **englisch** (Standard) und **deutsch** (wenn Home Assistant auf Deutsch steht): Karte über `CARD_I18N`/`cardText()`, Editor über `EDITOR_I18N`. Neue Texte immer in beiden Sprachen anlegen. Die README ist zweisprachig (erst Englisch, dann Deutsch).
 6. Native Home-Assistant-Mittel verwenden: `ha-form`-Editor, `hass-more-info` bei Klick auf Werte,
    `hass.formatEntityState` für Zahlen, Sections-Breite über `getGridOptions()`. Kein `localStorage`,
    keine eigenen Netzwerkzugriffe; Daten nur über `hass` (States, `callWS`).
