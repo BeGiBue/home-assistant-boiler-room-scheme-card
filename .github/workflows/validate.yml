@@ -47,3 +47,4 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - run: python tools/test_editor.py
       - run: python tools/test_security.py
+      - run: python tools/test_interaction.py

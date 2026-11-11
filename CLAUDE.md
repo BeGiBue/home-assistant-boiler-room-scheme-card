@@ -80,6 +80,10 @@ Detailbereich ab y854. Die Höhe der `viewBox` hängt vom geöffneten Thema ab.
 - **Texte setzen** über `setT(id, text)`; schreibt zusätzlich in das Element `<id>-d` (kompakte Ansicht zeigt
   einige Werte zugleich im Schema und im Detailbereich).
 - **Klickbar** ist alles mit `data-entity="…"` (öffnet den Home-Assistant-Dialog). Leere Entität = nicht klickbar.
+  `_build()` macht diese Elemente und die Themen-Schaltflächen (`data-topic`) auch per Tastatur bedienbar (`tabindex`, `role="button"`,
+  Enter/Leertaste); der Fokusrahmen liegt am ersten `rect` bzw. `image` des Elements (`.clk:focus-visible`).
+- **Kästen:** `.box` und `.cell` teilen sich Füllung und Rahmen (5 % bzw. 12 % der Textfarbe, wie in den anderen Karten des Nutzers);
+  Themen-Schaltflächen nutzen `.tab` / `.tab.on` (getönt in der Primärfarbe). Keine festen Hex-Farben für Flächen verwenden.
 - **Diagramme** lesen ihre Geometrie aus `data-x0/x1/y0/y1/xr` am Zielelement (`#chart`, `#chart-burner`),
   sonst gelten die Standardwerte des breiten Layouts.
 - Konfigurationsschlüssel liegen in `DEFAULTS`; jeder neue Schlüssel braucht ein Feld im Editor
@@ -94,7 +98,7 @@ sagen, dass keine Vorschau erzeugt werden konnte.
 
 ```bash
 npm run check                                   # node --check
-npm test                                        # Zahlen-Sicherheit, Editor + beide Layouts, HTML-Injection
+npm test                                        # Zahlen-Sicherheit, Editor + beide Layouts, HTML-Injection, Tastatur/Aktualisierung
 npm run preview                                 # tools/out/breit.png und tools/out/kompakt*.png
 python tools/harness.py --width 390 --topic diagrams --out tools/out/x.png   # einzelnes Bild
 python tools/images.py extract                  # Gerätebilder nach assets/devices/*.webp

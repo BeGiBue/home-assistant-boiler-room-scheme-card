@@ -8,7 +8,7 @@
  *   card:      type: custom:heizungsanlage-card   (Einstellungen über den visuellen Editor)
  */
 
-const CARD_VERSION = '2.1.0';
+const CARD_VERSION = '2.2.0';
 
 // Maskiert dynamische Texte und Werte in doppelt zitierten HTML-/SVG-Attributen.
 const esc = (value) => String(value)
@@ -354,22 +354,37 @@ class HeizungsanlageCard extends HTMLElement {
       this._narrow = w > 0 ? w < 700 : false;
     }
     this.shadowRoot.innerHTML = `<style>${this._css()}</style><ha-card><div class="wrap">${this._svg()}</div></ha-card>`;
+    // Klickbare Elemente sind auch per Tastatur erreichbar (Tab, Enter/Leertaste)
+    const activate = (el, fn) => {
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'button');
+      el.addEventListener('click', fn);
+      el.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        fn(e);
+      });
+    };
     this.shadowRoot.querySelectorAll('[data-entity]').forEach((el) => {
       const id = el.getAttribute('data-entity');
       if (!id) return;
-      el.addEventListener('click', () => {
+      activate(el, () => {
         this.dispatchEvent(
           new CustomEvent('hass-more-info', { detail: { entityId: id }, bubbles: true, composed: true })
         );
       });
     });
     this.shadowRoot.querySelectorAll('[data-topic]').forEach((el) => {
-      el.addEventListener('click', () => {
+      activate(el, (e) => {
         const topic = el.getAttribute('data-topic');
+        const keyboard = e?.type === 'keydown';
+        const isButton = el.classList.contains('btn');
         this._open = this._open === topic ? null : topic;
         this._built = false;
         this._build();
         this._update();
+        // Der Detailbereich wird neu aufgebaut: Fokus bei Tastaturbedienung auf dieselbe Schaltfläche zurücksetzen
+        if (keyboard) this.shadowRoot.querySelector(`${isButton ? '.btn' : ':not(.btn)'}[data-topic="${topic}"]`)?.focus();
       });
     });
     this._built = true;
@@ -391,12 +406,23 @@ class HeizungsanlageCard extends HTMLElement {
              fill: var(--primary-text-color); font-size: 20px; }
       .s  { fill: var(--secondary-text-color); font-size: 18px; }
       .v  { font-weight: 600; font-size: 20px; }
-      .h  { font-weight: 700; font-size: 21px; }
-      .big{ font-weight: 700; font-size: 58px; letter-spacing: -1px; }
+      .h  { font-weight: 600; font-size: 21px; }
+      .big{ font-weight: 600; font-size: 54px; letter-spacing: -1px; }
       .tick { fill: var(--secondary-text-color); font-size: 14px; }
-      .box  { fill: var(--secondary-background-color, #f3f3f3); stroke: var(--divider-color, #dcdcdc); stroke-width: 1.5; }
-      .cell { fill: var(--card-background-color, #fff); stroke: var(--divider-color, #dcdcdc); stroke-width: 1; }
+      /* Gemeinsame Gestaltung mit den anderen Cards: Füllung und Rahmen aus der Textfarbe des Themes */
+      .box, .cell { fill: color-mix(in srgb, var(--primary-text-color, #888) 5%, transparent);
+                    stroke: color-mix(in srgb, var(--primary-text-color, #888) 12%, transparent); stroke-width: 1.5; }
+      .chipbg { fill: color-mix(in srgb, #ff7043 18%, transparent); }
+      .tab { fill: color-mix(in srgb, var(--primary-text-color, #888) 5%, transparent);
+             stroke: color-mix(in srgb, var(--primary-text-color, #888) 12%, transparent); stroke-width: 1.5; }
+      .tab.on { fill: color-mix(in srgb, var(--primary-color, #03a9f4) 18%, transparent);
+                stroke: color-mix(in srgb, var(--primary-color, #03a9f4) 55%, transparent); }
       .clk  { cursor: pointer; }
+      /* Tastatur: sichtbarer Fokus am Rahmen der Box bzw. um das Gerätebild */
+      .clk:focus { outline: none; }
+      .clk:focus-visible > rect { stroke: var(--primary-color, #03a9f4); stroke-width: 3; }
+      .clk:focus-visible > image { outline: 3px solid var(--primary-color, #03a9f4); outline-offset: 2px; }
+      @media (hover: hover) { .clk:hover > rect.cell, .clk:hover > rect.tab:not(.on) { fill: color-mix(in srgb, var(--primary-text-color, #888) 10%, transparent); } }
 
       /* Rohre */
       .pipe { fill:none; stroke-width:12; stroke-linecap:round; stroke-linejoin:round; opacity:.28; transition: opacity .4s; }
@@ -486,7 +512,7 @@ class HeizungsanlageCard extends HTMLElement {
     ]
       .map(
         (c, i) => `<g class="clk" data-entity="${esc(c.ent || '')}" transform="translate(${210 + i * 292},1092)">
-          <rect class="cell" width="284" height="60" rx="10"/>
+          <rect class="cell" width="284" height="60" rx="14"/>
           <text class="s" x="12" y="22" style="font-size:14px">${c.l}</text>
           <text class="v" id="${c.id}" x="12" y="49" style="font-size:20px">–</text></g>`
       )
@@ -494,14 +520,13 @@ class HeizungsanlageCard extends HTMLElement {
 
     const cw = 186;
     const sets =
-      `<rect class="box" x="20" y="1080" width="1360" height="152" rx="16"/>
-       <text class="h" x="42" y="1129" style="font-size:22px">${T.status}</text>
+      `<text class="h" x="42" y="1129" style="font-size:22px">${T.status}</text>
        <text class="h" x="42" y="1197" style="font-size:22px">${T.settings}</text>` +
       SETTINGS
         .map(([l, id, key], i) => {
           const x = 210 + i * (cw + 8);
           return `<g class="clk" data-entity="${esc(E[key] || '')}">
-            <rect class="cell" x="${x}" y="1160" width="${cw}" height="60" rx="10"/>
+            <rect class="cell" x="${x}" y="1160" width="${cw}" height="60" rx="14"/>
             <text class="s" x="${x + 12}" y="1182" style="font-size:14px">${T[l]}</text>
             <text class="v" id="${id}" x="${x + 12}" y="1209" style="font-size:20px">–</text></g>`;
         })
@@ -513,7 +538,8 @@ class HeizungsanlageCard extends HTMLElement {
 
   <!-- Kopf -->
   <g transform="translate(26,6) scale(1.25)">
-    ${LOGO}
+    <rect class="chipbg" x="-10" y="4" width="70" height="70" rx="20"/>
+    <g transform="translate(7,15.6) scale(.6)">${LOGO}</g>
   </g>
   <text class="big" x="118" y="66">${esc(cfg.title === DEFAULTS.title ? T.title : cfg.title)}</text>
   <text class="s" x="120" y="100" style="font-size:23px">${esc(cfg.subtitle || '')}</text>
@@ -712,16 +738,16 @@ class HeizungsanlageCard extends HTMLElement {
     s += `<text class="s" x="14" y="${by - 6}" style="font-size:15px">${T.details}</text>`;
     Object.entries(topics).forEach(([key, [label, x, y, w]]) => {
       const on = open === key;
-      s += `<g class="btn clk" data-topic="${key}">
-        <rect x="${x}" y="${y}" width="${w}" height="46" rx="23" fill="${on ? '#03a9f4' : 'var(--secondary-background-color)'}" stroke="${on ? '#03a9f4' : 'var(--divider-color)'}" stroke-width="1.5"/>
-        <text x="${x + w / 2}" y="${y + 30}" text-anchor="middle" class="h" style="font-size:18px;${on ? 'fill:#fff' : ''}">${label}</text></g>`;
+      s += `<g class="btn clk" data-topic="${key}" aria-pressed="${on}">
+        <rect class="tab${on ? ' on' : ''}" x="${x}" y="${y}" width="${w}" height="46" rx="23"/>
+        <text x="${x + w / 2}" y="${y + 30}" text-anchor="middle" class="h" style="font-size:18px">${label}</text></g>`;
     });
 
     // ---- Detail-Bereich (je ein Thema aufgeklappt) ----
     const py = by + 124;
     const tile = (x, y, w, h) => `<rect class="box" x="${x}" y="${y}" width="${w}" height="${h}" rx="14"/>`;
     const cell = (x, y, w, label, id, ent, h = 54) =>
-      `<g class="clk" data-entity="${esc(ent || '')}"><rect class="cell" x="${x}" y="${y}" width="${w}" height="${h}" rx="10"/>
+      `<g class="clk" data-entity="${esc(ent || '')}"><rect class="cell" x="${x}" y="${y}" width="${w}" height="${h}" rx="14"/>
         <text class="s" x="${x + 12}" y="${y + 19}" style="font-size:14px">${label}</text>
         <text class="v" id="${id}" x="${x + 12}" y="${y + h - 8}" style="font-size:20px">–</text></g>`;
     const infoTile = (y, h, title, rows, key, iw, align = '') => {
@@ -785,7 +811,8 @@ class HeizungsanlageCard extends HTMLElement {
 <svg class="narrow" viewBox="0 0 600 ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Heizungsanlage">
   ${this._defs()}
   <g transform="translate(14,6) scale(.8)">
-    ${LOGO}
+    <rect class="chipbg" x="-10" y="4" width="70" height="70" rx="20"/>
+    <g transform="translate(7,15.6) scale(.6)">${LOGO}</g>
   </g>
   <text class="big" x="70" y="48" style="font-size:38px;letter-spacing:-.5px">${esc(cfg.title === DEFAULTS.title ? T.title : cfg.title)}</text>
   <text class="s" x="72" y="76" style="font-size:16px">${esc(cfg.subtitle || '')}</text>

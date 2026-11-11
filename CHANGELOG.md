@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.0
+
+- Look aligned with the other cards (NAS, Eaton UPS, TouchKio, UniFi): boxes use the shared fill and border derived from the theme's text colour, the flame sits on a tinted icon field, the title is slightly lighter. In the bottom bar the grey frame is gone; status and settings are individual tiles. The active button in the compact layout is tinted instead of solid blue and follows the theme's primary colour. Pipes, devices, positions and charts are unchanged. / Aussehen an die anderen Karten angeglichen (NAS, Eaton UPS, TouchKio, UniFi): Kästen nutzen die gemeinsame Füllung und Rahmenfarbe aus der Textfarbe des Themes, die Flamme sitzt auf einem getönten Symbolfeld, der Titel ist etwas leichter. In der unteren Leiste entfällt der graue Rahmen; Status und Einstellungen sind einzelne Kacheln. Die aktive Schaltfläche im kompakten Layout ist getönt statt vollblau und folgt der Primärfarbe des Themes. Leitungen, Geräte, Positionen und Diagramme bleiben unverändert.
+- Keyboard: every value with an entity and every topic button can be reached with Tab and activated with Enter or Space, with a visible focus frame. After opening or closing a topic with the keyboard the focus stays on the button. / Tastatur: Jeder Wert mit Entität und jede Themen-Schaltfläche ist mit Tab erreichbar und mit Enter oder Leertaste auslösbar, mit sichtbarem Fokusrahmen. Nach dem Öffnen oder Schließen eines Themas per Tastatur bleibt der Fokus auf der Schaltfläche.
+- Card type, options and entities are unchanged. / Kartentyp, Optionen und Entitäten bleiben unverändert.
+- Browser tests for keyboard use and updates added (`tools/test_interaction.py`). / Browser-Tests für Tastaturbedienung und Aktualisierung ergänzt (`tools/test_interaction.py`).
+
 ## 2.1.0
 
 - The card now appears in English by default and in German when Home Assistant is set to German; the editor already supported both. / Die Karte erscheint jetzt standardmäßig auf Englisch und auf Deutsch, wenn Home Assistant auf Deutsch eingestellt ist; der Editor war bereits zweisprachig.
