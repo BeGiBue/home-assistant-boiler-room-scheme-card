@@ -10,9 +10,9 @@
 
 Home Assistant card (`custom:heizungsanlage-card`) that shows a gas or oil heating system as an animated diagram: boiler, hot water tank, pumps, radiator, gas and water meters and water softener, with live values and history. The defaults fit a Viessmann system with the ViCare integration (Vitocrossal 300 & Vitocell 100-V); everything can be changed in the visual editor.
 
-<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-350-closed-light.png" width="350" alt="Heating mode, 350 px, details closed"> <img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-350-diagrams-light.png" width="350" alt="Heating mode, 350 px, charts open">
+<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-350-closed-light.png?v=2" width="350" alt="Heating mode, 350 px, details closed"> <img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-350-diagrams-light.png?v=2" width="350" alt="Heating mode, 350 px, charts open">
 
-<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-800-light.png" width="800" alt="Full diagram in heating mode, 800 px">
+<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-800-light.png?v=2" width="800" alt="Full diagram in heating mode, 800 px">
 
 ### Features
 
@@ -53,9 +53,9 @@ Independent community project, not affiliated with Viessmann or Home Assistant. 
 
 Home-Assistant-Karte (`custom:heizungsanlage-card`), die eine Gas- oder Ölheizung als animiertes Anlagenschema darstellt: Kessel, Warmwasserspeicher, Pumpen, Heizkörper, Gas- und Wasserzähler und Enthärtungsanlage, mit Live-Werten und Verläufen. Die Standardwerte passen zu einer Viessmann-Anlage mit der ViCare-Integration (Vitocrossal 300 & Vitocell 100-V); alles lässt sich im grafischen Editor anpassen.
 
-<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-350-closed-light.png" width="350" alt="Heizbetrieb, 350 px, Details geschlossen"> <img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-350-diagrams-light.png" width="350" alt="Heizbetrieb, 350 px, Diagramme geöffnet">
+<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-350-closed-light.png?v=2" width="350" alt="Heizbetrieb, 350 px, Details geschlossen"> <img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-350-diagrams-light.png?v=2" width="350" alt="Heizbetrieb, 350 px, Diagramme geöffnet">
 
-<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-800-light.png" width="800" alt="Vollständiges Schema im Heizbetrieb, 800 px">
+<img src="https://raw.githubusercontent.com/BeGiBue/home-assistant-boiler-room-scheme-card/main/screenshots/boiler-heating-800-light.png?v=2" width="800" alt="Vollständiges Schema im Heizbetrieb, 800 px">
 
 ### Funktionen
 

@@ -104,6 +104,11 @@ Diese Werte sind in der Karte vorgesehen, aber ohne Entität zeigt die Anzeige �
 - **Speicherbox:** ohne Titel; 24-h-Verlauf mit zwei grauen gestrichelten Grenzlinien (ohne Beschriftung) und
   orange gepunkteter Soll-Linie; rechts Maximum, Istwert und Minimum ohne „Min"/„Max". Brenner- und
   Speicherbox haben dieselbe Oberkante und Höhe (Speicherbox ist die Referenz).
+- **Gemeinsame Gestaltung (seit 2.2.0, vom Nutzer per Mockup bestätigt):** Die Karte teilt sich die Gestaltung mit den anderen
+  Karten des Nutzers (NAS, Eaton UPS, TouchKio, UniFi, SLZB, System Monitor): Kästen mit Füllung und Rahmen aus der Textfarbe
+  des Themes, Flamme im Kopf auf getöntem Symbolfeld, Titel in Schriftstärke 600. Die untere Leiste hat keinen umschließenden
+  Kasten mehr, Status und Einstellungen sind einzelne Kacheln. Die aktive Themen-Schaltfläche (kompakt) ist getönt statt vollblau.
+  Schema, Leitungen, Geräte, Positionen und Diagramme wurden dabei bewusst nicht verändert.
 - **Untere Leiste** in zwei Zeilen: Status (Außentemperatur, Frostschutz, Brennerstunden, Brennerstarts) und
   Einstellungen (Komfort, Normal, Reduziert, Warmwasser Soll, Verschiebung, Steigung).
 - Tafel der Enthärtungsanlage (Regeneration, Salz %) ist immer sichtbar; Schriftzug „AQMOS".
