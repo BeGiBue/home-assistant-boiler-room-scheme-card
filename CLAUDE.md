@@ -81,9 +81,10 @@ Detailbereich ab y854. Die Höhe der `viewBox` hängt vom geöffneten Thema ab.
   einige Werte zugleich im Schema und im Detailbereich).
 - **Klickbar** ist alles mit `data-entity="…"` (öffnet den Home-Assistant-Dialog). Leere Entität = nicht klickbar.
   `_build()` macht diese Elemente und die Themen-Schaltflächen (`data-topic`) auch per Tastatur bedienbar (`tabindex`, `role="button"`,
-  Enter/Leertaste); der Fokusrahmen liegt am ersten `rect` bzw. `image` des Elements (`.clk:focus-visible`).
+  Enter/Leertaste); der Fokusrahmen ist ein `outline` um das ganze Element (`.clk:focus-visible`), auch bei Werten ohne Kasten.
 - **Kästen:** `.box` und `.cell` teilen sich Füllung und Rahmen (5 % bzw. 12 % der Textfarbe, wie in den anderen Karten des Nutzers);
   Themen-Schaltflächen nutzen `.tab` / `.tab.on` (getönt in der Primärfarbe). Keine festen Hex-Farben für Flächen verwenden.
+  Die `color-mix()`-Farben stehen in einem `@supports`-Block; davor stehen Grundfarben für Browser ohne `color-mix()`.
 - **Diagramme** lesen ihre Geometrie aus `data-x0/x1/y0/y1/xr` am Zielelement (`#chart`, `#chart-burner`),
   sonst gelten die Standardwerte des breiten Layouts.
 - Konfigurationsschlüssel liegen in `DEFAULTS`; jeder neue Schlüssel braucht ein Feld im Editor

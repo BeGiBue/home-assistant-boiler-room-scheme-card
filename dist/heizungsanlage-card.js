@@ -409,20 +409,23 @@ class HeizungsanlageCard extends HTMLElement {
       .h  { font-weight: 600; font-size: 21px; }
       .big{ font-weight: 600; font-size: 54px; letter-spacing: -1px; }
       .tick { fill: var(--secondary-text-color); font-size: 14px; }
+      /* Kästen: Grundfarben für Browser ohne color-mix() (alte Kiosk-/Tablet-Browser) */
+      .box, .cell, .tab { fill: var(--secondary-background-color, #f3f3f3); stroke: var(--divider-color, #dcdcdc); stroke-width: 1.5; }
+      .chipbg { fill: none; }
+      .tab.on { stroke: var(--primary-color, #03a9f4); stroke-width: 2.5; }
       /* Gemeinsame Gestaltung mit den anderen Cards: Füllung und Rahmen aus der Textfarbe des Themes */
-      .box, .cell { fill: color-mix(in srgb, var(--primary-text-color, #888) 5%, transparent);
-                    stroke: color-mix(in srgb, var(--primary-text-color, #888) 12%, transparent); stroke-width: 1.5; }
-      .chipbg { fill: color-mix(in srgb, #ff7043 18%, transparent); }
-      .tab { fill: color-mix(in srgb, var(--primary-text-color, #888) 5%, transparent);
-             stroke: color-mix(in srgb, var(--primary-text-color, #888) 12%, transparent); stroke-width: 1.5; }
-      .tab.on { fill: color-mix(in srgb, var(--primary-color, #03a9f4) 18%, transparent);
-                stroke: color-mix(in srgb, var(--primary-color, #03a9f4) 55%, transparent); }
+      @supports (color: color-mix(in srgb, red 5%, transparent)) {
+        .box, .cell, .tab { fill: color-mix(in srgb, var(--primary-text-color, #888) 5%, transparent);
+                            stroke: color-mix(in srgb, var(--primary-text-color, #888) 12%, transparent); }
+        .chipbg { fill: color-mix(in srgb, #ff7043 18%, transparent); }
+        .tab.on { fill: color-mix(in srgb, var(--primary-color, #03a9f4) 18%, transparent);
+                  stroke: color-mix(in srgb, var(--primary-color, #03a9f4) 55%, transparent); stroke-width: 1.5; }
+        @media (hover: hover) { .clk:hover > rect.cell, .clk:hover > rect.tab:not(.on) { fill: color-mix(in srgb, var(--primary-text-color, #888) 10%, transparent); } }
+      }
       .clk  { cursor: pointer; }
-      /* Tastatur: sichtbarer Fokus am Rahmen der Box bzw. um das Gerätebild */
+      /* Tastatur: ein Fokusrahmen um das ganze Element (Box, Wert, Gerätebild, Pumpe, Schaltfläche) */
       .clk:focus { outline: none; }
-      .clk:focus-visible > rect { stroke: var(--primary-color, #03a9f4); stroke-width: 3; }
-      .clk:focus-visible > image { outline: 3px solid var(--primary-color, #03a9f4); outline-offset: 2px; }
-      @media (hover: hover) { .clk:hover > rect.cell, .clk:hover > rect.tab:not(.on) { fill: color-mix(in srgb, var(--primary-text-color, #888) 10%, transparent); } }
+      .clk:focus-visible { outline: 3px solid var(--primary-color, #03a9f4); outline-offset: 3px; border-radius: 6px; }
 
       /* Rohre */
       .pipe { fill:none; stroke-width:12; stroke-linecap:round; stroke-linejoin:round; opacity:.28; transition: opacity .4s; }

@@ -54,8 +54,14 @@ async () => {
     first.dispatchEvent(new Event('click'));
     check(`${layout}: Enter, Leertaste und Klick öffnen die Entität, andere Tasten nicht`,
       events.length === 3 && events.every((id) => id === first.getAttribute('data-entity')));
-    check(`${layout}: sichtbarer Fokus am Rahmen`, !first.matches(':focus-visible') || !first.querySelector(':scope > rect') ||
-      parseFloat(getComputedStyle(first.querySelector(':scope > rect')).strokeWidth) >= 3);
+    // Jedes klickbare Element zeigt bei Tastaturfokus einen Rahmen (auch Werte ohne Kasten, Pumpen, Heizkörper, Diagramme)
+    const noFrame = withId.filter((el) => { el.focus(); const cs = getComputedStyle(el); return el.matches(':focus-visible') && !(cs.outlineStyle === 'solid' && parseFloat(cs.outlineWidth) >= 3); });
+    check(`${layout}: sichtbarer Fokusrahmen an allen ${withId.length} klickbaren Elementen`, noFrame.length === 0);
+    first.focus();
+    const space = new KeyboardEvent('keydown', {key: ' ', bubbles: true, composed: true, cancelable: true});
+    first.dispatchEvent(space);
+    check(`${layout}: Leertaste rollt die Seite nicht`, space.defaultPrevented);
+    events.length = 0;
 
     // Neue Werte: Texte werden gesetzt, die Grafik bleibt bestehen
     const s = states();
@@ -79,6 +85,8 @@ async () => {
     b.focus();
     key(b, 'Enter');
     const b2 = btn(c, 'diagrams');
+    const framed = (el) => { const cs = getComputedStyle(el); return !el.matches(':focus-visible') || (cs.outlineStyle === 'solid' && parseFloat(cs.outlineWidth) >= 3); };
+    check('kompakt: Fokusrahmen an Diagrammen und Werten im geöffneten Thema', [...root.querySelectorAll('[data-entity]')].filter((el) => el.getAttribute('data-entity')).every((el) => { el.focus(); return framed(el); }) && (b2.focus(), framed(b2)));
     check('kompakt: Enter öffnet das Thema, Schaltfläche ist markiert', c._open === 'diagrams' && b2.getAttribute('aria-pressed') === 'true' && b2.querySelector('rect').classList.contains('on') && !!root.getElementById('chart'));
     check('kompakt: Fokus bleibt nach dem Öffnen auf der Schaltfläche', root.activeElement === b2);
     check('kompakt: Text der aktiven Schaltfläche bleibt in Textfarbe lesbar', getComputedStyle(b2.querySelector('text')).fill === getComputedStyle(btn(c, 'status').querySelector('text')).fill);
