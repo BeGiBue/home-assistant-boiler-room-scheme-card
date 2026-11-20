@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.1
+
+- Maintenance: test and build tools updated, no functional changes. / Wartung: Test- und Build-Werkzeuge aktualisiert, keine Änderungen an der Funktion.
+
 ## 2.2.0
 
 - Look aligned with the other cards (NAS, Eaton UPS, TouchKio, UniFi): boxes use the shared fill and border derived from the theme's text colour, the flame sits on a tinted icon field, the title is slightly lighter. In the bottom bar the grey frame is gone; status and settings are individual tiles. The active button in the compact layout is tinted instead of solid blue and follows the theme's primary colour. Pipes, devices, positions and charts are unchanged. / Aussehen an die anderen Karten angeglichen (NAS, Eaton UPS, TouchKio, UniFi): Kästen nutzen die gemeinsame Füllung und Rahmenfarbe aus der Textfarbe des Themes, die Flamme sitzt auf einem getönten Symbolfeld, der Titel ist etwas leichter. In der unteren Leiste entfällt der graue Rahmen; Status und Einstellungen sind einzelne Kacheln. Die aktive Schaltfläche im kompakten Layout ist getönt statt vollblau und folgt der Primärfarbe des Themes. Leitungen, Geräte, Positionen und Diagramme bleiben unverändert.

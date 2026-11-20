@@ -8,7 +8,7 @@
  *   card:      type: custom:heizungsanlage-card   (Einstellungen über den visuellen Editor)
  */
 
-const CARD_VERSION = '2.2.0';
+const CARD_VERSION = '2.2.1';
 
 // Maskiert dynamische Texte und Werte in doppelt zitierten HTML-/SVG-Attributen.
 const esc = (value) => String(value)
