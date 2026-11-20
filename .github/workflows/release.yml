@@ -16,8 +16,8 @@ jobs:
     name: GitHub-Release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
       - name: Version ermitteln
@@ -41,7 +41,7 @@ jobs:
         run: |
           awk -v v="## ${{ steps.v.outputs.version }}" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md > notes.md
           test -s notes.md || echo "Release v${{ steps.v.outputs.version }}" > notes.md
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         if: steps.v.outputs.exists == 'false'
         with:
           tag_name: v${{ steps.v.outputs.version }}
